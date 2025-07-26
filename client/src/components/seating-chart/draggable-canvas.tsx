@@ -146,7 +146,12 @@ export function DraggableCanvas({
             width: 'max(100%, 1200px)',
             height: 'max(100%, 800px)'
           }}
-          onClick={handleCanvasClick}
+          onClick={(e) => {
+            // Only add desk if clicking directly on canvas and there are existing desks
+            if (e.currentTarget === e.target && desks.length > 0) {
+              onAddDesk('rectangular');
+            }
+          }}
         >
           {/* Room Elements */}
 
@@ -232,7 +237,7 @@ export function DraggableCanvas({
               <div className="text-center pointer-events-none">
                 {item.type === 'door' && (
                   <div className="flex items-center justify-center w-full h-full">
-                    <div className="text-lg">🚪</div>
+                    <div className="text-xs font-medium text-gray-700">Door</div>
                   </div>
                 )}
                 {item.type === 'teacher-desk' && (
