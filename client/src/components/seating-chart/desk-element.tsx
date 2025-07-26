@@ -23,6 +23,11 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onEdit }: Desk
     const element = elementRef.current;
     if (!element || !window.interact) return;
 
+    // Set initial position without any transform
+    element.style.left = `${desk.x}px`;
+    element.style.top = `${desk.y}px`;
+    element.style.transform = '';
+
     const interactable = window.interact(element)
       .draggable({
         inertia: false,
@@ -37,49 +42,51 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onEdit }: Desk
         ],
         listeners: {
           start(event: any) {
-            event.target.style.zIndex = '1000';
-            event.target.style.opacity = '0.8';
-            event.target.style.transform += ' scale(1.05)';
+            const target = event.target;
+            target.style.zIndex = '1000';
+            target.style.opacity = '0.8';
+            target.style.transform = 'scale(1.05)';
+            target.style.cursor = 'grabbing';
+            
+            // Add visual indicator
+            target.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
           },
           move(event: any) {
             const target = event.target;
-            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-
-            target.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
-            target.setAttribute('data-x', x.toString());
-            target.setAttribute('data-y', y.toString());
+            
+            // Get current position
+            const currentX = parseFloat(target.style.left) || 0;
+            const currentY = parseFloat(target.style.top) || 0;
+            
+            // Apply movement delta
+            const newX = currentX + event.dx;
+            const newY = currentY + event.dy;
+            
+            target.style.left = `${newX}px`;
+            target.style.top = `${newY}px`;
           },
           end(event: any) {
             const target = event.target;
             target.style.zIndex = '';
             target.style.opacity = '';
-            target.style.transform = target.style.transform.replace(' scale(1.05)', '');
+            target.style.transform = '';
+            target.style.cursor = 'move';
+            target.style.boxShadow = '';
             
-            const x = parseFloat(target.getAttribute('data-x')) || 0;
-            const y = parseFloat(target.getAttribute('data-y')) || 0;
+            // Get final position and snap to grid
+            const finalX = Math.round((parseFloat(target.style.left) || 0) / 20) * 20;
+            const finalY = Math.round((parseFloat(target.style.top) || 0) / 20) * 20;
             
-            // Calculate new absolute position
-            const newX = desk.x + x;
-            const newY = desk.y + y;
+            target.style.left = `${finalX}px`;
+            target.style.top = `${finalY}px`;
             
-            // Reset relative position
-            target.setAttribute('data-x', '0');
-            target.setAttribute('data-y', '0');
-            target.style.transform = `translate(${newX}px, ${newY}px)`;
-            
-            onMove(desk.id, newX, newY);
+            onMove(desk.id, finalX, finalY);
           }
         }
       })
       .on('tap', function(event: any) {
         onSelect(desk.id);
       });
-
-    // Set initial position
-    element.style.transform = `translate(${desk.x}px, ${desk.y}px)`;
-    element.setAttribute('data-x', '0');
-    element.setAttribute('data-y', '0');
 
     return () => {
       if (interactable) {
@@ -104,8 +111,6 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onEdit }: Desk
       ref={elementRef}
       className={cn(baseClasses, shapeClasses, selectedClasses)}
       style={{
-        left: 0,
-        top: 0,
         width: desk.type === 'round' ? '120px' : '120px',
         height: desk.type === 'round' ? '120px' : '64px'
       }}

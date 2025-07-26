@@ -69,14 +69,18 @@
 }
 
 .desk-element {
-  transition: all 0.2s ease;
+  transition: box-shadow 0.2s ease, opacity 0.2s ease;
   user-select: none;
   cursor: move;
+  position: absolute !important;
 }
 
 .desk-element:hover {
-  transform: scale(1.02);
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.desk-element:active {
+  cursor: grabbing;
 }
 
 .desk-selected {
