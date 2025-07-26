@@ -83,12 +83,12 @@ export function DeskArrangements({ onArrangeDesks }: DeskArrangementsProps) {
 
   const createSpecialGroupLayout = () => {
     const desks: Omit<Desk, 'id' | 'number'>[] = [];
-    const spacingX = 125; // Tight spacing within groups
-    const spacingY = 70;  // Tight spacing within groups
-    const groupSpacingX = 200; // Space between groups
-    const groupSpacingY = 150; // Space between rows of groups
-    const startX = 200;
-    const startY = 200;
+    const spacingX = 140; // Spacing within groups
+    const spacingY = 80;  // Spacing within groups
+    const groupSpacingX = 300; // More space between groups
+    const groupSpacingY = 200; // More space between rows of groups
+    const startX = 160;
+    const startY = 160;
 
     // Front row: 3 groups of 4
     for (let group = 0; group < 3; group++) {
@@ -106,7 +106,7 @@ export function DeskArrangements({ onArrangeDesks }: DeskArrangementsProps) {
 
     // Back row: 2 groups of 4 (centered)
     for (let group = 0; group < 2; group++) {
-      const groupX = startX + 100 + group * groupSpacingX; // Offset to center
+      const groupX = startX + 150 + group * groupSpacingX; // Offset to center better
       const groupY = startY + groupSpacingY;
 
       // 2x2 square formation
