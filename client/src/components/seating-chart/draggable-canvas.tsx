@@ -146,12 +146,7 @@ export function DraggableCanvas({
             width: 'max(100%, 1200px)',
             height: 'max(100%, 800px)'
           }}
-          onClick={(e) => {
-            // Only add desk if clicking directly on canvas and there are existing desks
-            if (e.currentTarget === e.target && desks.length > 0) {
-              onAddDesk('rectangular');
-            }
-          }}
+
         >
           {/* Room Elements */}
 
