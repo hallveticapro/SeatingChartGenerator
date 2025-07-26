@@ -1,30 +1,43 @@
 import { useEffect, useRef, useState } from 'react';
-import { Desk } from '@/types/seating';
+import { Desk, FurnitureItem } from '@/types/seating';
 import { DeskElement } from './desk-element';
 import { DeskArrangements } from './desk-arrangements';
+import { ClassroomFurniture } from './classroom-furniture';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Circle, Users, Armchair as Chair } from 'lucide-react';
+import { Plus, Trash2, Users, Armchair as Chair } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface DraggableCanvasProps {
   desks: Desk[];
+  furniture: FurnitureItem[];
+  teacherDesk: { x: number; y: number; } | null;
   onAddDesk: (type: 'rectangular' | 'round') => void;
   onDeleteDesk: (deskId: string) => void;
   onMoveDesk: (deskId: string, x: number, y: number) => void;
   onEditDesk: (deskId: string, number: number) => void;
   onArrangeDesks: (desks: Omit<Desk, 'id' | 'number'>[]) => void;
+  onAddFurniture: (type: string, x: number, y: number) => void;
+  onMoveFurniture: (furnitureId: string, x: number, y: number) => void;
+  onDeleteFurniture: (furnitureId: string) => void;
+  onMoveTeacherDesk: (x: number, y: number) => void;
   assignedCount: number;
 }
 
 export function DraggableCanvas({
   desks,
+  furniture,
+  teacherDesk,
   onAddDesk,
   onDeleteDesk,
   onMoveDesk,
   onEditDesk,
   onArrangeDesks,
+  onAddFurniture,
+  onMoveFurniture,
+  onDeleteFurniture,
+  onMoveTeacherDesk,
   assignedCount
 }: DraggableCanvasProps) {
   const [selectedDeskId, setSelectedDeskId] = useState<string | null>(null);
@@ -102,17 +115,9 @@ export function DraggableCanvas({
               <span className="sm:hidden">Delete</span>
             </Button>
             <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
-            <Button 
-              onClick={() => onAddDesk('round')} 
-              variant="secondary"
-              size="sm"
-              style={{ opacity: 1, visibility: 'visible' }}
-            >
-              <Circle className="w-4 h-4 mr-1 sm:mr-2" />
-              <span className="mobile-hidden">Round Table</span>
-              <span className="sm:hidden">Round</span>
-            </Button>
+
             <DeskArrangements onArrangeDesks={onArrangeDesks} />
+            <ClassroomFurniture onAddFurniture={onAddFurniture} />
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm">
             <div className="flex items-center space-x-1 sm:space-x-2 text-gray-600">
@@ -142,15 +147,40 @@ export function DraggableCanvas({
           onClick={handleCanvasClick}
         >
           {/* Room Elements */}
-          {/* Teacher Desk */}
-          <div className="absolute top-8 left-1/2 transform -translate-x-1/2">
-            <div className="bg-amber-100 border-2 border-amber-300 rounded-lg p-4 w-40 h-20 flex items-center justify-center shadow-lg">
-              <div className="text-center">
+          {/* Teacher Desk - Now draggable */}
+          {teacherDesk && (
+            <div 
+              className="absolute cursor-move bg-amber-100 border-2 border-amber-300 rounded-lg p-4 w-40 h-20 flex items-center justify-center shadow-lg desk-element"
+              style={{ left: teacherDesk.x, top: teacherDesk.y }}
+              ref={(el) => {
+                if (el && window.interact) {
+                  window.interact(el).draggable({
+                    listeners: {
+                      move(event: any) {
+                        const target = event.target;
+                        const x = (parseFloat(target.style.left) || 0) + event.dx;
+                        const y = (parseFloat(target.style.top) || 0) + event.dy;
+                        target.style.left = `${x}px`;
+                        target.style.top = `${y}px`;
+                      },
+                      end(event: any) {
+                        const x = Math.round((parseFloat(event.target.style.left) || 0) / 20) * 20;
+                        const y = Math.round((parseFloat(event.target.style.top) || 0) / 20) * 20;
+                        event.target.style.left = `${x}px`;
+                        event.target.style.top = `${y}px`;
+                        onMoveTeacherDesk(x, y);
+                      }
+                    }
+                  });
+                }
+              }}
+            >
+              <div className="text-center pointer-events-none">
                 <Chair className="w-5 h-5 text-amber-700 mx-auto mb-1" />
                 <div className="text-xs font-medium text-amber-800">Teacher Desk</div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Front Label */}
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
@@ -167,6 +197,47 @@ export function DraggableCanvas({
               <div className="absolute -top-2 -right-8 text-xs font-medium text-gray-700 whitespace-nowrap">Door</div>
             </div>
           </div>
+
+          {/* Furniture Items */}
+          {furniture?.map(item => (
+            <div
+              key={item.id}
+              className="absolute cursor-move bg-gray-200 border-2 border-gray-400 rounded-lg flex items-center justify-center shadow-lg desk-element"
+              style={{ 
+                left: item.x, 
+                top: item.y, 
+                width: item.width, 
+                height: item.height 
+              }}
+              ref={(el) => {
+                if (el && window.interact) {
+                  window.interact(el).draggable({
+                    listeners: {
+                      move(event: any) {
+                        const target = event.target;
+                        const x = (parseFloat(target.style.left) || 0) + event.dx;
+                        const y = (parseFloat(target.style.top) || 0) + event.dy;
+                        target.style.left = `${x}px`;
+                        target.style.top = `${y}px`;
+                      },
+                      end(event: any) {
+                        const x = Math.round((parseFloat(event.target.style.left) || 0) / 20) * 20;
+                        const y = Math.round((parseFloat(event.target.style.top) || 0) / 20) * 20;
+                        event.target.style.left = `${x}px`;
+                        event.target.style.top = `${y}px`;
+                        onMoveFurniture(item.id, x, y);
+                      }
+                    }
+                  });
+                }
+              }}
+              onDoubleClick={() => onDeleteFurniture(item.id)}
+            >
+              <div className="text-center pointer-events-none">
+                <div className="text-xs font-medium text-gray-700">{item.name}</div>
+              </div>
+            </div>
+          ))}
 
           {/* Student Desks */}
           {desks.map(desk => (

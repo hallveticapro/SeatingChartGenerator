@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Student, Desk, Constraint, RoomLayout } from '@/types/seating';
+import { Student, Desk, Constraint, RoomLayout, FurnitureItem } from '@/types/seating';
 import { StudentListManager } from '@/components/seating-chart/student-list-manager';
 import { ConstraintsBuilder } from '@/components/seating-chart/constraints-builder';
 import { DraggableCanvas } from '@/components/seating-chart/draggable-canvas';
@@ -8,12 +8,14 @@ import { useToast } from '@/hooks/use-toast';
 import { generateSeatingChart } from '@/lib/seating-algorithm';
 import { exportToPDF } from '@/lib/pdf-export';
 import { storage } from '@/lib/storage';
-import { Presentation, Save, FileText, Sparkles, RotateCcw } from 'lucide-react';
+import { Presentation, Save, FileText, Sparkles, RotateCcw, Upload } from 'lucide-react';
 
 export default function Home() {
   const [students, setStudents] = useState<Student[]>([]);
   const [desks, setDesks] = useState<Desk[]>([]);
   const [constraints, setConstraints] = useState<Constraint[]>([]);
+  const [furniture, setFurniture] = useState<FurnitureItem[]>([]);
+  const [teacherDesk, setTeacherDesk] = useState<{ x: number; y: number; } | null>({ x: 400, y: 80 });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
@@ -26,19 +28,23 @@ export default function Home() {
       setStudents(latest.students);
       setDesks(latest.desks);
       setConstraints(latest.constraints);
+      setFurniture(latest.furniture || []);
+      setTeacherDesk(latest.teacherDesk || { x: 400, y: 80 });
     }
   }, []);
 
   // Auto-save functionality
   useEffect(() => {
     const saveTimeout = setTimeout(() => {
-      if (students.length > 0 || desks.length > 0 || constraints.length > 0) {
+      if (students.length > 0 || desks.length > 0 || constraints.length > 0 || furniture.length > 0) {
         const layout: RoomLayout = {
           id: 'current',
           name: 'Current Layout',
           students,
           desks,
           constraints,
+          furniture,
+          teacherDesk,
           createdAt: new Date(),
           updatedAt: new Date()
         };
@@ -47,7 +53,7 @@ export default function Home() {
     }, 1000);
 
     return () => clearTimeout(saveTimeout);
-  }, [students, desks, constraints]);
+  }, [students, desks, constraints, furniture, teacherDesk]);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -291,13 +297,15 @@ export default function Home() {
 
   const handleResetAll = () => {
     const confirmReset = confirm(
-      "Are you sure you want to reset everything? This will clear all students, desks, and constraints. This action cannot be undone."
+      "Are you sure you want to reset everything? This will clear all students, desks, constraints, and furniture. This action cannot be undone."
     );
     
     if (confirmReset) {
       setStudents([]);
       setDesks([]);
       setConstraints([]);
+      setFurniture([]);
+      setTeacherDesk({ x: 400, y: 80 });
       
       // Clear from localStorage
       storage.deleteLayout('current');
@@ -307,6 +315,115 @@ export default function Home() {
         description: "All data has been cleared successfully."
       });
     }
+  };
+
+  const handleAddFurniture = (type: string, x: number, y: number) => {
+    const furnitureNames: { [key: string]: { name: string; width: number; height: number } } = {
+      bookshelf: { name: 'Bookshelf', width: 40, height: 120 },
+      cabinet: { name: 'Cabinet', width: 80, height: 60 },
+      counter: { name: 'Counter', width: 160, height: 40 },
+      closet: { name: 'Closet', width: 80, height: 80 },
+      refrigerator: { name: 'Refrigerator', width: 60, height: 60 },
+      printer: { name: 'Printer Station', width: 80, height: 60 }
+    };
+
+    const furnitureInfo = furnitureNames[type] || { name: 'Item', width: 80, height: 60 };
+    
+    const newFurniture: FurnitureItem = {
+      id: generateId(),
+      type,
+      x,
+      y,
+      width: furnitureInfo.width,
+      height: furnitureInfo.height,
+      name: furnitureInfo.name
+    };
+    
+    setFurniture(prev => [...prev, newFurniture]);
+    
+    toast({
+      title: "Furniture added",
+      description: `${furnitureInfo.name} has been added to the classroom.`
+    });
+  };
+
+  const handleMoveFurniture = (furnitureId: string, x: number, y: number) => {
+    setFurniture(prev => prev.map(item => 
+      item.id === furnitureId ? { ...item, x, y } : item
+    ));
+  };
+
+  const handleDeleteFurniture = (furnitureId: string) => {
+    setFurniture(prev => prev.filter(item => item.id !== furnitureId));
+    toast({
+      title: "Furniture removed",
+      description: "The furniture item has been removed."
+    });
+  };
+
+  const handleMoveTeacherDesk = (x: number, y: number) => {
+    setTeacherDesk({ x, y });
+  };
+
+  const handleSaveLayoutAsJSON = () => {
+    const layout: RoomLayout = {
+      id: generateId(),
+      name: `Classroom Layout ${new Date().toLocaleDateString()}`,
+      students,
+      desks,
+      constraints,
+      furniture,
+      teacherDesk,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const dataStr = JSON.stringify(layout, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `classroom-layout-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Layout saved",
+      description: "Your classroom layout has been downloaded as a JSON file."
+    });
+  };
+
+  const handleImportLayout = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const layout: RoomLayout = JSON.parse(e.target?.result as string);
+        
+        setStudents(layout.students || []);
+        setDesks(layout.desks || []);
+        setConstraints(layout.constraints || []);
+        setFurniture(layout.furniture || []);
+        setTeacherDesk(layout.teacherDesk || { x: 400, y: 80 });
+
+        toast({
+          title: "Layout imported",
+          description: "Your classroom layout has been successfully imported."
+        });
+      } catch (error) {
+        toast({
+          title: "Import failed",
+          description: "Failed to import layout. Please check the file format.",
+          variant: "destructive"
+        });
+      }
+    };
+    reader.readAsText(file);
   };
 
   const assignedCount = desks.filter(d => d.assignedStudent).length;
@@ -340,7 +457,7 @@ export default function Home() {
                 <span className="sm:hidden">Reset</span>
               </Button>
               <Button 
-                onClick={handleSaveLayout}
+                onClick={handleSaveLayoutAsJSON}
                 variant="outline"
                 size="sm"
                 className="flex-1 sm:flex-none"
@@ -350,6 +467,29 @@ export default function Home() {
                 <span className="mobile-hidden">Save Layout</span>
                 <span className="sm:hidden">Save</span>
               </Button>
+              <label className="flex-1 sm:flex-none">
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportLayout}
+                  className="hidden"
+                />
+                <Button 
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  style={{ opacity: 1, visibility: 'visible', backgroundColor: 'white', color: 'black', border: '1px solid #ccc' }}
+                  onClick={() => {
+                    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+                    input?.click();
+                  }}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  <span className="mobile-hidden">Import Layout</span>
+                  <span className="sm:hidden">Import</span>
+                </Button>
+              </label>
               <Button 
                 onClick={handleExportPDF}
                 disabled={isExporting || desks.length === 0}
@@ -418,11 +558,17 @@ export default function Home() {
         {/* Canvas Area */}
         <DraggableCanvas
           desks={desks}
+          furniture={furniture}
+          teacherDesk={teacherDesk}
           onAddDesk={handleAddDesk}
           onDeleteDesk={handleDeleteDesk}
           onMoveDesk={handleMoveDesk}
           onEditDesk={handleEditDesk}
           onArrangeDesks={handleArrangeDesks}
+          onAddFurniture={handleAddFurniture}
+          onMoveFurniture={handleMoveFurniture}
+          onDeleteFurniture={handleDeleteFurniture}
+          onMoveTeacherDesk={handleMoveTeacherDesk}
           assignedCount={assignedCount}
         />
       </div>

@@ -41,10 +41,10 @@ export function DeskArrangements({ onArrangeDesks }: DeskArrangementsProps) {
   const createGroupLayout = (groupSize: number, numGroups: number) => {
     const desks: Omit<Desk, 'id' | 'number'>[] = [];
     const deskWidth = 120;
-    const spacingX = 140;
-    const spacingY = 100;
-    const groupSpacingX = 300;
-    const groupSpacingY = 250;
+    const spacingX = 130; // Reduced from 140
+    const spacingY = 80;  // Reduced from 100
+    const groupSpacingX = 280; // Reduced from 300
+    const groupSpacingY = 200; // Reduced from 250
     const startX = 200;
     const startY = 200;
 
@@ -53,33 +53,29 @@ export function DeskArrangements({ onArrangeDesks }: DeskArrangementsProps) {
       const groupY = startY + Math.floor(group / 3) * groupSpacingY;
 
       if (groupSize === 2) {
-        // Side by side
+        // Side by side - closer together
         desks.push(
           { x: groupX, y: groupY, type: 'rectangular' },
-          { x: groupX + spacingX, y: groupY, type: 'rectangular' }
+          { x: groupX + 125, y: groupY, type: 'rectangular' } // Closer spacing
         );
       } else if (groupSize === 4) {
-        // 2x2 square
+        // 2x2 square - tighter formation
         desks.push(
           { x: groupX, y: groupY, type: 'rectangular' },
-          { x: groupX + spacingX, y: groupY, type: 'rectangular' },
-          { x: groupX, y: groupY + spacingY, type: 'rectangular' },
-          { x: groupX + spacingX, y: groupY + spacingY, type: 'rectangular' }
+          { x: groupX + 125, y: groupY, type: 'rectangular' },
+          { x: groupX, y: groupY + 70, type: 'rectangular' },
+          { x: groupX + 125, y: groupY + 70, type: 'rectangular' }
         );
       } else if (groupSize === 6) {
-        // Round table with 6 seats
-        const centerX = groupX + spacingX / 2;
-        const centerY = groupY + spacingY / 2;
-        const radius = 80;
-        
-        for (let i = 0; i < 6; i++) {
-          const angle = (i * Math.PI * 2) / 6;
-          desks.push({
-            x: centerX + Math.cos(angle) * radius - deskWidth / 2,
-            y: centerY + Math.sin(angle) * radius - 32,
-            type: 'rectangular'
-          });
-        }
+        // 3x2 rectangle formation
+        desks.push(
+          { x: groupX, y: groupY, type: 'rectangular' },
+          { x: groupX + 125, y: groupY, type: 'rectangular' },
+          { x: groupX + 250, y: groupY, type: 'rectangular' },
+          { x: groupX, y: groupY + 70, type: 'rectangular' },
+          { x: groupX + 125, y: groupY + 70, type: 'rectangular' },
+          { x: groupX + 250, y: groupY + 70, type: 'rectangular' }
+        );
       }
     }
     return desks;

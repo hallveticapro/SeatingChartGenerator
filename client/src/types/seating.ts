@@ -20,12 +20,24 @@ export interface Constraint {
   minDistance?: number;
 }
 
+export interface FurnitureItem {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  name: string;
+}
+
 export interface RoomLayout {
   id: string;
   name: string;
   desks: Desk[];
   students: Student[];
   constraints: Constraint[];
+  furniture: FurnitureItem[];
+  teacherDesk: { x: number; y: number; } | null;
   createdAt: Date;
   updatedAt: Date;
 }

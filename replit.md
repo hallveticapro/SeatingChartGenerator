@@ -19,6 +19,10 @@ Preferred communication style: Simple, everyday language.
 - Improved desk text handling with fixed dimensions and proper overflow management
 - Added reset button to clear all data (students, desks, constraints) with confirmation dialog
 - Implemented quick desk arrangement layouts (rows, groups, pairs) for common classroom setups
+- Removed round table option and made teacher desk draggable with grid snapping
+- Added classroom furniture items (bookshelf, cabinet, counter, closet, refrigerator, printer)
+- Implemented JSON export/import functionality for complete layout save/load without database
+- Tightened spacing in desk groupings for more realistic classroom arrangements
 
 ## System Architecture
 
