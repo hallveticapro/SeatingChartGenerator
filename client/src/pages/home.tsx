@@ -15,7 +15,7 @@ export default function Home() {
   const [desks, setDesks] = useState<Desk[]>([]);
   const [constraints, setConstraints] = useState<Constraint[]>([]);
   const [furniture, setFurniture] = useState<FurnitureItem[]>([]);
-  const [frontLabel, setFrontLabel] = useState<{ x: number; y: number; } | null>({ x: 400, y: 80 });
+  const [frontLabel, setFrontLabel] = useState<{ x: number; y: number; } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
@@ -307,7 +307,7 @@ export default function Home() {
       setDesks([]);
       setConstraints([]);
       setFurniture([]);
-      setFrontLabel({ x: 400, y: 80 });
+      setFrontLabel(null);
       
       // Clear from localStorage
       storage.deleteLayout('current');
@@ -323,6 +323,7 @@ export default function Home() {
     const furnitureNames: { [key: string]: { name: string; width: number; height: number } } = {
       'teacher-desk': { name: 'Teacher Desk', width: 160, height: 80 },
       door: { name: 'Door', width: 20, height: 100 },
+      'front-label': { name: 'Front Label', width: 160, height: 30 },
       bookshelf: { name: 'Bookshelf', width: 40, height: 120 },
       cabinet: { name: 'Cabinet', width: 80, height: 60 },
       counter: { name: 'Counter', width: 160, height: 40 },
@@ -423,7 +424,7 @@ export default function Home() {
         setDesks(layout.desks || []);
         setConstraints(layout.constraints || []);
         setFurniture(layout.furniture || []);
-        setFrontLabel(layout.frontLabel || { x: 400, y: 80 });
+        setFrontLabel(layout.frontLabel || null);
 
         toast({
           title: "Layout imported",

@@ -30,6 +30,13 @@ export function ClassroomFurniture({ onAddFurniture }: ClassroomFurnitureProps) 
       height: 100
     },
     {
+      name: "Front Label",
+      icon: <FileText className="w-4 h-4" />,
+      type: "front-label",
+      width: 160,
+      height: 30
+    },
+    {
       name: "Bookshelf",
       icon: <BookOpen className="w-4 h-4" />,
       type: "bookshelf",

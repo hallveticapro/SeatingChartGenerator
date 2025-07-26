@@ -151,37 +151,7 @@ export function DraggableCanvas({
           {/* Room Elements */}
 
 
-          {/* Front Label - Now draggable */}
-          {frontLabel && (
-            <div 
-              className="absolute cursor-move bg-green-100 border border-green-300 rounded px-4 py-1"
-              style={{ left: frontLabel.x, top: frontLabel.y }}
-              ref={(el) => {
-                if (el && window.interact) {
-                  window.interact(el).draggable({
-                    listeners: {
-                      move(event: any) {
-                        const target = event.target;
-                        const x = (parseFloat(target.style.left) || 0) + event.dx;
-                        const y = (parseFloat(target.style.top) || 0) + event.dy;
-                        target.style.left = `${x}px`;
-                        target.style.top = `${y}px`;
-                      },
-                      end(event: any) {
-                        const x = Math.round((parseFloat(event.target.style.left) || 0) / 20) * 20;
-                        const y = Math.round((parseFloat(event.target.style.top) || 0) / 20) * 20;
-                        event.target.style.left = `${x}px`;
-                        event.target.style.top = `${y}px`;
-                        onMoveFrontLabel(x, y);
-                      }
-                    }
-                  });
-                }
-              }}
-            >
-              <span className="text-xs font-medium text-green-800 pointer-events-none">FRONT OF CLASSROOM</span>
-            </div>
-          )}
+
 
 
 
@@ -192,6 +162,7 @@ export function DraggableCanvas({
               className={`absolute cursor-move flex items-center justify-center shadow-lg desk-element ${
                 item.type === 'teacher-desk' ? 'bg-amber-100 border-2 border-amber-300 rounded-lg' :
                 item.type === 'door' ? 'bg-white border-2 border-gray-800' :
+                item.type === 'front-label' ? 'bg-green-100 border border-green-300 rounded px-4 py-1' :
                 'bg-gray-200 border-2 border-gray-400 rounded-lg'
               }`}
               style={{ 
@@ -235,13 +206,18 @@ export function DraggableCanvas({
                     <div className="text-xs font-medium text-gray-700">Door</div>
                   </div>
                 )}
+                {item.type === 'front-label' && (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <div className="text-xs font-medium text-green-800">FRONT OF CLASSROOM</div>
+                  </div>
+                )}
                 {item.type === 'teacher-desk' && (
                   <>
                     <Chair className="w-5 h-5 text-amber-700 mx-auto mb-1" />
                     <div className="text-xs font-medium text-amber-800">Teacher</div>
                   </>
                 )}
-                {item.type !== 'door' && item.type !== 'teacher-desk' && (
+                {item.type !== 'door' && item.type !== 'teacher-desk' && item.type !== 'front-label' && (
                   <div className="text-xs font-medium text-gray-700">{item.name}</div>
                 )}
               </div>
