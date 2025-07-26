@@ -1,0 +1,114 @@
+###############################################################################
+# PROMPT FOR REPLIT AI: “CLASSROOM SEATING CHART BUILDER” WEB APP            #
+###############################################################################
+
+OBJECTIVE  
+Build a browser-based seating-chart generator for teachers.  
+Users should be able to lay out desks on a draggable canvas, import a student
+list, set seating constraints, and press **Generate** to produce an optimized
+chart. The app must be modern, responsive, and visually clean (rounded corners,
+soft shadows, high-contrast color palette, system font stack).
+
+-------------------------------------------------------------------------------
+TECH STACK  
+-------------------------------------------------------------------------------
+• Vanilla HTML5 + CSS3 + JavaScript (ES6 modules) — keep dependencies light.  
+• Use **Vite** for instant hot-reload + bundling (already supported on Replit).  
+• Drag-and-drop: [`interact.js`](https://interactjs.io/) (MIT).  
+• PDF export: [`html2canvas`](https://github.com/niklasvh/html2canvas) +
+  [`jspdf`](https://github.com/parallax/jsPDF).  
+• Persist layouts in `localStorage` (no backend needed).  
+
+-------------------------------------------------------------------------------
+UI/UX REQUIREMENTS  
+-------------------------------------------------------------------------------
+1. **Layout**  
+   • Header bar with project title & “Save as PDF” button.  
+   • Main area split into:
+     – **Left panel** (350 px max)  
+       ‣ Student list importer (single text field OR bulk paste, one name/line).  
+       ‣ Constraints builder (see details).  
+       ‣ “Generate Seating Chart” primary button.  
+     – **Right panel** (flex-grow)  
+       ‣ Draggable **Canvas** (`<div id="room-canvas">`):  
+           ◦ Grid background (subtle 20 px squares).  
+           ◦ “Add Desk” & “Delete Selected” buttons pinned top-left of canvas.  
+           ◦ Tool icons to drop common room items: Teacher Desk, Door, Front Label.  
+2. **Component style**  
+   • Rounded corners (border-radius = 8 px).  
+   • Smooth shadow (`box-shadow: 0 2px 6px rgba(0,0,0,.15)`).  
+   • Use CSS variables for theme colors:  
+     `--primary: #2563eb; --surface: #ffffff; --accent: #fbbf24;` etc.  
+   • All interactive states (hover, focus, drag) need clear visual feedback.  
+3. **Desk shapes**  
+   • Rectangular desk default (120×60 px).  
+   • Optional toggle to create **Round Table** (diameter = 120 px).  
+4. **Accessibility**  
+   • Keyboard navigation for Add/Delete desk.  
+   • Focus rings (`outline: 2px solid var(--accent)`) for WCAG 2.1 AA.
+
+-------------------------------------------------------------------------------
+FUNCTIONAL REQUIREMENTS  
+-------------------------------------------------------------------------------
+### Desk Management  
+• `Add Desk` creates a draggable desk element, auto-numbered (1-based).  
+• Deleting a desk re-indexes numbers sequentially.  
+• Editing: double-click a desk to rename/override its number.  
+• Canvas uses `interact.js` for drag, snap-to-grid (20 px).  
+
+### Student List  
+• “+ Student” adds one name.  
+• Bulk import textarea: paste names (newline-separated) → parsed into array.  
+• Names stored in array of objects `{ id, name }`. Duplicate names allowed
+  but auto-append incrementing suffix (“Alex (2)”).
+
+### Constraints Engine  
+Provide UI builders for three constraint types (stored in `constraints[]`):  
+1. **Hard Seat** – “Student X must sit at Desk Y.”  
+2. **Keep Apart** – “Student A cannot sit next to Student B.”  
+3. **Distance** – “Student X and Student Y must be at least N desks apart
+   (Manhattan grid distance).”  
+
+### Seating Algorithm  
+1. If any hard-seat constraints exist, place those first.  
+2. Use backtracking with forward-checking:  
+   • Fill remaining desks in random order, skipping placements that break
+     constraints.  
+   • Abort at 50 000 iterations → declare layout impossible and explain why.  
+3. On success: render student names inside desk elements; color-code seats that
+   satisfy special rules.  
+
+### Export  
+• “Save as PDF” triggers html2canvas → jsPDF → download `seating-chart.pdf`.
+  Warn user if canvas width > A4/Letter limits — suggest landscape orientation.
+
+-------------------------------------------------------------------------------
+EDGE CASES TO HANDLE  
+-------------------------------------------------------------------------------
+1. 🪑 **Too Many Students** – > desks; prompt to add desks or remove students.  
+2. 🧑‍🏫 **Too Few Students** – < desks; allow blanks but keep numbering.  
+3. 🔁 **Duplicate Student Names** – auto-suffix or prompt rename.  
+4. 🔗 **Impossible Constraints** – circular dependencies, seat already locked,
+   distance larger than room; algorithm must detect and display toast error
+   listing offending rules.  
+5. 🗑️ **Desk Deleted After Placement** – re-validate existing seating, mark
+   un-seated students, allow “Regenerate” to fix.  
+6. 📄 **Empty Canvas on Export** – disable PDF button if no desks.  
+7. 🖥️ **Extreme Zoom / Tiny Screens** – responsive scaling of the canvas,
+   horizontal scroll allowed but keep controls accessible.  
+8. 🏷️ **Name Overflow** – if student name width > desk width, shrink font or
+   ellipsis plus full name tooltip.  
+9. 🔄 **Undo/Redo** – optional bonus: maintain stack of layout states.  
+
+-------------------------------------------------------------------------------
+DEV NOTES & NON-FUNCTIONAL  
+-------------------------------------------------------------------------------
+• Use ES classes or functional modules (`Room`, `Desk`, `Student`, `Engine`).  
+• Type JSDoc comments for all public functions.  
+• Keep code readable: single-purpose files in `/src`.  
+• Ship a minimal `README.md` with install/run instructions.  
+• Provide a 30-second GIF demo in `/docs/demo.gif` (nice-to-have).  
+
+###############################################################################
+# END OF PROMPT                                                              #
+###############################################################################
