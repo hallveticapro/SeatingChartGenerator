@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Desk } from '@/types/seating';
 import { DeskElement } from './desk-element';
+import { DeskArrangements } from './desk-arrangements';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Circle, Users, Armchair as Chair } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -13,6 +14,7 @@ interface DraggableCanvasProps {
   onDeleteDesk: (deskId: string) => void;
   onMoveDesk: (deskId: string, x: number, y: number) => void;
   onEditDesk: (deskId: string, number: number) => void;
+  onArrangeDesks: (desks: Omit<Desk, 'id' | 'number'>[]) => void;
   assignedCount: number;
 }
 
@@ -22,6 +24,7 @@ export function DraggableCanvas({
   onDeleteDesk,
   onMoveDesk,
   onEditDesk,
+  onArrangeDesks,
   assignedCount
 }: DraggableCanvasProps) {
   const [selectedDeskId, setSelectedDeskId] = useState<string | null>(null);
@@ -109,6 +112,7 @@ export function DraggableCanvas({
               <span className="mobile-hidden">Round Table</span>
               <span className="sm:hidden">Round</span>
             </Button>
+            <DeskArrangements onArrangeDesks={onArrangeDesks} />
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm">
             <div className="flex items-center space-x-1 sm:space-x-2 text-gray-600">

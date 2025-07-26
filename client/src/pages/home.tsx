@@ -142,6 +142,27 @@ export default function Home() {
     ));
   };
 
+  const handleArrangeDesks = (newDesks: Omit<Desk, 'id' | 'number'>[]) => {
+    // Clear existing seating assignments
+    setDesks([]);
+    
+    // Create new desks with proper IDs and numbers
+    const arrangedDesks: Desk[] = newDesks.map((desk, index) => ({
+      id: generateId(),
+      number: index + 1,
+      x: desk.x,
+      y: desk.y,
+      type: desk.type
+    }));
+    
+    setDesks(arrangedDesks);
+    
+    toast({
+      title: "Desks arranged",
+      description: `Created ${arrangedDesks.length} desks in the selected layout.`
+    });
+  };
+
   const handleAddConstraint = (constraint: Omit<Constraint, 'id'>) => {
     const newConstraint: Constraint = {
       ...constraint,
@@ -401,6 +422,7 @@ export default function Home() {
           onDeleteDesk={handleDeleteDesk}
           onMoveDesk={handleMoveDesk}
           onEditDesk={handleEditDesk}
+          onArrangeDesks={handleArrangeDesks}
           assignedCount={assignedCount}
         />
       </div>
