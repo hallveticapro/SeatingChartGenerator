@@ -11,9 +11,9 @@ declare global {
 interface DeskElementProps {
   desk: Desk;
   isSelected: boolean;
-  onSelect: (deskId: string) => void;
+  onSelect: (deskId: string, ctrlKey: boolean) => void;
   onMove: (deskId: string, x: number, y: number) => void;
-  onEdit: (deskId: string) => void;
+  onEdit: (desk: Desk) => void;
 }
 
 export function DeskElement({ desk, isSelected, onSelect, onMove, onEdit }: DeskElementProps) {
@@ -85,7 +85,7 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onEdit }: Desk
         }
       })
       .on('tap', function(event: any) {
-        onSelect(desk.id);
+        onSelect(desk.id, event.ctrlKey);
       });
 
     return () => {
@@ -96,15 +96,19 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onEdit }: Desk
   }, [desk.id, desk.x, desk.y, onMove, onSelect]);
 
   const handleDoubleClick = () => {
-    onEdit(desk.id);
+    onEdit(desk);
   };
 
-  const baseClasses = "desk-element absolute bg-white border-2 border-gray-300 shadow-lg flex items-center justify-center cursor-move";
+  const baseClasses = "desk-element absolute border-2 shadow-lg flex items-center justify-center cursor-move";
   const shapeClasses = desk.type === 'round' 
     ? "rounded-full w-30 h-30" 
     : "rounded-lg w-30 h-16";
   
-  const selectedClasses = isSelected ? "desk-selected" : "";
+  const selectedClasses = isSelected 
+    ? "bg-blue-100 border-blue-500" 
+    : desk.assignedStudent 
+      ? "bg-green-50 border-green-300" 
+      : "bg-white border-gray-300";
 
   return (
     <div

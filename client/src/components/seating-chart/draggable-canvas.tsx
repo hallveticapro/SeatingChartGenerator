@@ -13,6 +13,10 @@ interface DraggableCanvasProps {
   desks: Desk[];
   furniture: FurnitureItem[];
   frontLabel: { x: number; y: number; } | null;
+  selectedDeskIds: string[];
+  isSelecting: boolean;
+  selectionStart: { x: number; y: number } | null;
+  selectionEnd: { x: number; y: number } | null;
   onAddDesk: (type: 'rectangular' | 'round') => void;
   onDeleteDesk: (deskId: string) => void;
   onMoveDesk: (deskId: string, x: number, y: number) => void;
@@ -23,6 +27,10 @@ interface DraggableCanvasProps {
   onDeleteFurniture: (furnitureId: string) => void;
   onRotateFurniture: (furnitureId: string) => void;
   onMoveFrontLabel: (x: number, y: number) => void;
+  onDeskSelect: (deskId: string, ctrlKey: boolean) => void;
+  onCanvasMouseDown: (e: React.MouseEvent) => void;
+  onCanvasMouseMove: (e: React.MouseEvent) => void;
+  onCanvasMouseUp: () => void;
   assignedCount: number;
 }
 
@@ -30,6 +38,10 @@ export function DraggableCanvas({
   desks,
   furniture,
   frontLabel,
+  selectedDeskIds,
+  isSelecting,
+  selectionStart,
+  selectionEnd,
   onAddDesk,
   onDeleteDesk,
   onMoveDesk,
@@ -40,6 +52,10 @@ export function DraggableCanvas({
   onDeleteFurniture,
   onRotateFurniture,
   onMoveFrontLabel,
+  onDeskSelect,
+  onCanvasMouseDown,
+  onCanvasMouseMove,
+  onCanvasMouseUp,
   assignedCount
 }: DraggableCanvasProps) {
   const [selectedDeskId, setSelectedDeskId] = useState<string | null>(null);
@@ -146,7 +162,9 @@ export function DraggableCanvas({
             width: 'max(100%, 1200px)',
             height: 'max(100%, 800px)'
           }}
-
+          onMouseDown={onCanvasMouseDown}
+          onMouseMove={onCanvasMouseMove}
+          onMouseUp={onCanvasMouseUp}
         >
           {/* Room Elements */}
 
@@ -229,12 +247,25 @@ export function DraggableCanvas({
             <DeskElement
               key={desk.id}
               desk={desk}
-              isSelected={selectedDeskId === desk.id}
-              onSelect={setSelectedDeskId}
+              isSelected={selectedDeskIds.includes(desk.id)}
+              onSelect={(deskId, ctrlKey) => onDeskSelect(deskId, ctrlKey)}
               onMove={onMoveDesk}
               onEdit={handleDeskEdit}
             />
           ))}
+
+          {/* Selection Rectangle */}
+          {isSelecting && selectionStart && selectionEnd && (
+            <div
+              className="absolute border-2 border-blue-500 bg-blue-100 bg-opacity-20 pointer-events-none"
+              style={{
+                left: Math.min(selectionStart.x, selectionEnd.x),
+                top: Math.min(selectionStart.y, selectionEnd.y),
+                width: Math.abs(selectionEnd.x - selectionStart.x),
+                height: Math.abs(selectionEnd.y - selectionStart.y)
+              }}
+            />
+          )}
 
           {/* Empty State */}
           {desks.length === 0 && (

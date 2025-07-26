@@ -16,6 +16,10 @@ export default function Home() {
   const [constraints, setConstraints] = useState<Constraint[]>([]);
   const [furniture, setFurniture] = useState<FurnitureItem[]>([]);
   const [frontLabel, setFrontLabel] = useState<{ x: number; y: number; } | null>(null);
+  const [selectedDeskIds, setSelectedDeskIds] = useState<string[]>([]);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
+  const [selectionEnd, setSelectionEnd] = useState<{ x: number; y: number } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
@@ -379,6 +383,71 @@ export default function Home() {
     setFrontLabel({ x, y });
   };
 
+  const handleDeskSelect = (deskId: string, ctrlKey: boolean) => {
+    if (ctrlKey) {
+      setSelectedDeskIds(prev => 
+        prev.includes(deskId) 
+          ? prev.filter(id => id !== deskId)
+          : [...prev, deskId]
+      );
+    } else {
+      setSelectedDeskIds([deskId]);
+    }
+  };
+
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setIsSelecting(true);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left + e.currentTarget.scrollLeft;
+      const y = e.clientY - rect.top + e.currentTarget.scrollTop;
+      setSelectionStart({ x, y });
+      setSelectionEnd({ x, y });
+      
+      if (!e.ctrlKey) {
+        setSelectedDeskIds([]);
+      }
+    }
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (isSelecting && selectionStart) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left + e.currentTarget.scrollLeft;
+      const y = e.clientY - rect.top + e.currentTarget.scrollTop;
+      setSelectionEnd({ x, y });
+
+      // Find desks within selection rectangle
+      const minX = Math.min(selectionStart.x, x);
+      const maxX = Math.max(selectionStart.x, x);
+      const minY = Math.min(selectionStart.y, y);
+      const maxY = Math.max(selectionStart.y, y);
+
+      const selectedDesks = desks.filter(desk => {
+        const deskCenterX = desk.x + 60; // Half desk width
+        const deskCenterY = desk.y + 30; // Half desk height
+        return deskCenterX >= minX && deskCenterX <= maxX && 
+               deskCenterY >= minY && deskCenterY <= maxY;
+      });
+
+      if (e.ctrlKey) {
+        setSelectedDeskIds(prev => {
+          const newIds = selectedDesks.map(d => d.id);
+          const combined = [...prev, ...newIds];
+          return [...new Set(combined)];
+        });
+      } else {
+        setSelectedDeskIds(selectedDesks.map(d => d.id));
+      }
+    }
+  };
+
+  const handleCanvasMouseUp = () => {
+    setIsSelecting(false);
+    setSelectionStart(null);
+    setSelectionEnd(null);
+  };
+
   const handleSaveLayoutAsJSON = () => {
     const layout: RoomLayout = {
       id: generateId(),
@@ -575,6 +644,10 @@ export default function Home() {
           desks={desks}
           furniture={furniture}
           frontLabel={frontLabel}
+          selectedDeskIds={selectedDeskIds}
+          isSelecting={isSelecting}
+          selectionStart={selectionStart}
+          selectionEnd={selectionEnd}
           onAddDesk={handleAddDesk}
           onDeleteDesk={handleDeleteDesk}
           onMoveDesk={handleMoveDesk}
@@ -585,6 +658,10 @@ export default function Home() {
           onDeleteFurniture={handleDeleteFurniture}
           onRotateFurniture={handleRotateFurniture}
           onMoveFrontLabel={handleMoveFrontLabel}
+          onDeskSelect={handleDeskSelect}
+          onCanvasMouseDown={handleCanvasMouseDown}
+          onCanvasMouseMove={handleCanvasMouseMove}
+          onCanvasMouseUp={handleCanvasMouseUp}
           assignedCount={assignedCount}
         />
       </div>
