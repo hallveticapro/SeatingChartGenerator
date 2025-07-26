@@ -28,6 +28,7 @@ export interface FurnitureItem {
   width: number;
   height: number;
   name: string;
+  rotation: number; // 0, 90, 180, 270 degrees
 }
 
 export interface RoomLayout {
@@ -37,7 +38,7 @@ export interface RoomLayout {
   students: Student[];
   constraints: Constraint[];
   furniture: FurnitureItem[];
-  teacherDesk: { x: number; y: number; } | null;
+  frontLabel: { x: number; y: number; } | null;
   createdAt: Date;
   updatedAt: Date;
 }

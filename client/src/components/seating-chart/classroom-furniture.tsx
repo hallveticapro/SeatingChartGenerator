@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Archive, BookOpen, Refrigerator, Armchair, FileText, Printer } from 'lucide-react';
+import { Archive, BookOpen, Refrigerator, Armchair, FileText, Printer, DoorOpen } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +15,20 @@ interface ClassroomFurnitureProps {
 
 export function ClassroomFurniture({ onAddFurniture }: ClassroomFurnitureProps) {
   const furnitureItems = [
+    {
+      name: "Teacher Desk",
+      icon: <Armchair className="w-4 h-4" />,
+      type: "teacher-desk",
+      width: 160,
+      height: 80
+    },
+    {
+      name: "Door",
+      icon: <DoorOpen className="w-4 h-4" />,
+      type: "door",
+      width: 20,
+      height: 100
+    },
     {
       name: "Bookshelf",
       icon: <BookOpen className="w-4 h-4" />,

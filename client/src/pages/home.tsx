@@ -15,7 +15,7 @@ export default function Home() {
   const [desks, setDesks] = useState<Desk[]>([]);
   const [constraints, setConstraints] = useState<Constraint[]>([]);
   const [furniture, setFurniture] = useState<FurnitureItem[]>([]);
-  const [teacherDesk, setTeacherDesk] = useState<{ x: number; y: number; } | null>({ x: 400, y: 80 });
+  const [frontLabel, setFrontLabel] = useState<{ x: number; y: number; } | null>({ x: 400, y: 80 });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
@@ -29,7 +29,7 @@ export default function Home() {
       setDesks(latest.desks);
       setConstraints(latest.constraints);
       setFurniture(latest.furniture || []);
-      setTeacherDesk(latest.teacherDesk || { x: 400, y: 80 });
+      setFrontLabel(latest.frontLabel || { x: 400, y: 80 });
     }
   }, []);
 
@@ -44,7 +44,7 @@ export default function Home() {
           desks,
           constraints,
           furniture,
-          teacherDesk,
+          frontLabel,
           createdAt: new Date(),
           updatedAt: new Date()
         };
@@ -53,7 +53,7 @@ export default function Home() {
     }, 1000);
 
     return () => clearTimeout(saveTimeout);
-  }, [students, desks, constraints, furniture, teacherDesk]);
+  }, [students, desks, constraints, furniture, frontLabel]);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -254,6 +254,8 @@ export default function Home() {
       students,
       desks,
       constraints,
+      furniture,
+      frontLabel,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -305,7 +307,7 @@ export default function Home() {
       setDesks([]);
       setConstraints([]);
       setFurniture([]);
-      setTeacherDesk({ x: 400, y: 80 });
+      setFrontLabel({ x: 400, y: 80 });
       
       // Clear from localStorage
       storage.deleteLayout('current');
@@ -319,6 +321,8 @@ export default function Home() {
 
   const handleAddFurniture = (type: string, x: number, y: number) => {
     const furnitureNames: { [key: string]: { name: string; width: number; height: number } } = {
+      'teacher-desk': { name: 'Teacher Desk', width: 160, height: 80 },
+      door: { name: 'Door', width: 20, height: 100 },
       bookshelf: { name: 'Bookshelf', width: 40, height: 120 },
       cabinet: { name: 'Cabinet', width: 80, height: 60 },
       counter: { name: 'Counter', width: 160, height: 40 },
@@ -336,7 +340,8 @@ export default function Home() {
       y,
       width: furnitureInfo.width,
       height: furnitureInfo.height,
-      name: furnitureInfo.name
+      name: furnitureInfo.name,
+      rotation: 0
     };
     
     setFurniture(prev => [...prev, newFurniture]);
@@ -361,8 +366,16 @@ export default function Home() {
     });
   };
 
-  const handleMoveTeacherDesk = (x: number, y: number) => {
-    setTeacherDesk({ x, y });
+  const handleRotateFurniture = (furnitureId: string) => {
+    setFurniture(prev => prev.map(item => 
+      item.id === furnitureId 
+        ? { ...item, rotation: (item.rotation + 90) % 360 }
+        : item
+    ));
+  };
+
+  const handleMoveFrontLabel = (x: number, y: number) => {
+    setFrontLabel({ x, y });
   };
 
   const handleSaveLayoutAsJSON = () => {
@@ -373,7 +386,7 @@ export default function Home() {
       desks,
       constraints,
       furniture,
-      teacherDesk,
+      frontLabel,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -382,9 +395,10 @@ export default function Home() {
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
     
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T');
     const link = document.createElement('a');
     link.href = url;
-    link.download = `classroom-layout-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `classroom-layout-${timestamp[0]}-${timestamp[1].split('.')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -409,7 +423,7 @@ export default function Home() {
         setDesks(layout.desks || []);
         setConstraints(layout.constraints || []);
         setFurniture(layout.furniture || []);
-        setTeacherDesk(layout.teacherDesk || { x: 400, y: 80 });
+        setFrontLabel(layout.frontLabel || { x: 400, y: 80 });
 
         toast({
           title: "Layout imported",
@@ -559,7 +573,7 @@ export default function Home() {
         <DraggableCanvas
           desks={desks}
           furniture={furniture}
-          teacherDesk={teacherDesk}
+          frontLabel={frontLabel}
           onAddDesk={handleAddDesk}
           onDeleteDesk={handleDeleteDesk}
           onMoveDesk={handleMoveDesk}
@@ -568,7 +582,8 @@ export default function Home() {
           onAddFurniture={handleAddFurniture}
           onMoveFurniture={handleMoveFurniture}
           onDeleteFurniture={handleDeleteFurniture}
-          onMoveTeacherDesk={handleMoveTeacherDesk}
+          onRotateFurniture={handleRotateFurniture}
+          onMoveFrontLabel={handleMoveFrontLabel}
           assignedCount={assignedCount}
         />
       </div>

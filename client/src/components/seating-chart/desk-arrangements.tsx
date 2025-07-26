@@ -81,6 +81,46 @@ export function DeskArrangements({ onArrangeDesks }: DeskArrangementsProps) {
     return desks;
   };
 
+  const createSpecialGroupLayout = () => {
+    const desks: Omit<Desk, 'id' | 'number'>[] = [];
+    const spacingX = 125; // Tight spacing within groups
+    const spacingY = 70;  // Tight spacing within groups
+    const groupSpacingX = 200; // Space between groups
+    const groupSpacingY = 150; // Space between rows of groups
+    const startX = 200;
+    const startY = 200;
+
+    // Front row: 3 groups of 4
+    for (let group = 0; group < 3; group++) {
+      const groupX = startX + group * groupSpacingX;
+      const groupY = startY;
+
+      // 2x2 square formation
+      desks.push(
+        { x: groupX, y: groupY, type: 'rectangular' },
+        { x: groupX + spacingX, y: groupY, type: 'rectangular' },
+        { x: groupX, y: groupY + spacingY, type: 'rectangular' },
+        { x: groupX + spacingX, y: groupY + spacingY, type: 'rectangular' }
+      );
+    }
+
+    // Back row: 2 groups of 4 (centered)
+    for (let group = 0; group < 2; group++) {
+      const groupX = startX + 100 + group * groupSpacingX; // Offset to center
+      const groupY = startY + groupSpacingY;
+
+      // 2x2 square formation
+      desks.push(
+        { x: groupX, y: groupY, type: 'rectangular' },
+        { x: groupX + spacingX, y: groupY, type: 'rectangular' },
+        { x: groupX, y: groupY + spacingY, type: 'rectangular' },
+        { x: groupX + spacingX, y: groupY + spacingY, type: 'rectangular' }
+      );
+    }
+
+    return desks;
+  };
+
   const arrangements = [
     {
       name: "3x5 Rows",
@@ -106,6 +146,11 @@ export function DeskArrangements({ onArrangeDesks }: DeskArrangementsProps) {
       name: "4 Groups of 4",
       icon: <Grid3x3 className="w-4 h-4" />,
       action: () => createGroupLayout(4, 4)
+    },
+    {
+      name: "5 Groups of 4 (3+2)",
+      icon: <Grid3x3 className="w-4 h-4" />,
+      action: () => createSpecialGroupLayout()
     },
     {
       name: "3 Groups of 6",

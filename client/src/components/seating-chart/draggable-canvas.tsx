@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 interface DraggableCanvasProps {
   desks: Desk[];
   furniture: FurnitureItem[];
-  teacherDesk: { x: number; y: number; } | null;
+  frontLabel: { x: number; y: number; } | null;
   onAddDesk: (type: 'rectangular' | 'round') => void;
   onDeleteDesk: (deskId: string) => void;
   onMoveDesk: (deskId: string, x: number, y: number) => void;
@@ -21,14 +21,15 @@ interface DraggableCanvasProps {
   onAddFurniture: (type: string, x: number, y: number) => void;
   onMoveFurniture: (furnitureId: string, x: number, y: number) => void;
   onDeleteFurniture: (furnitureId: string) => void;
-  onMoveTeacherDesk: (x: number, y: number) => void;
+  onRotateFurniture: (furnitureId: string) => void;
+  onMoveFrontLabel: (x: number, y: number) => void;
   assignedCount: number;
 }
 
 export function DraggableCanvas({
   desks,
   furniture,
-  teacherDesk,
+  frontLabel,
   onAddDesk,
   onDeleteDesk,
   onMoveDesk,
@@ -37,7 +38,8 @@ export function DraggableCanvas({
   onAddFurniture,
   onMoveFurniture,
   onDeleteFurniture,
-  onMoveTeacherDesk,
+  onRotateFurniture,
+  onMoveFrontLabel,
   assignedCount
 }: DraggableCanvasProps) {
   const [selectedDeskId, setSelectedDeskId] = useState<string | null>(null);
@@ -147,11 +149,13 @@ export function DraggableCanvas({
           onClick={handleCanvasClick}
         >
           {/* Room Elements */}
-          {/* Teacher Desk - Now draggable */}
-          {teacherDesk && (
+
+
+          {/* Front Label - Now draggable */}
+          {frontLabel && (
             <div 
-              className="absolute cursor-move bg-amber-100 border-2 border-amber-300 rounded-lg p-4 w-40 h-20 flex items-center justify-center shadow-lg desk-element"
-              style={{ left: teacherDesk.x, top: teacherDesk.y }}
+              className="absolute cursor-move bg-green-100 border border-green-300 rounded px-4 py-1"
+              style={{ left: frontLabel.x, top: frontLabel.y }}
               ref={(el) => {
                 if (el && window.interact) {
                   window.interact(el).draggable({
@@ -168,46 +172,34 @@ export function DraggableCanvas({
                         const y = Math.round((parseFloat(event.target.style.top) || 0) / 20) * 20;
                         event.target.style.left = `${x}px`;
                         event.target.style.top = `${y}px`;
-                        onMoveTeacherDesk(x, y);
+                        onMoveFrontLabel(x, y);
                       }
                     }
                   });
                 }
               }}
             >
-              <div className="text-center pointer-events-none">
-                <Chair className="w-5 h-5 text-amber-700 mx-auto mb-1" />
-                <div className="text-xs font-medium text-amber-800">Teacher Desk</div>
-              </div>
+              <span className="text-xs font-medium text-green-800 pointer-events-none">FRONT OF CLASSROOM</span>
             </div>
           )}
 
-          {/* Front Label */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-            <div className="bg-green-100 border border-green-300 rounded px-4 py-1">
-              <span className="text-xs font-medium text-green-800">FRONT OF CLASSROOM</span>
-            </div>
-          </div>
 
-          {/* Door */}
-          <div className="absolute top-1/2 right-8 transform -translate-y-1/2">
-            <div className="bg-white border-2 border-gray-800 w-4 h-24 relative">
-              {/* Door swing arc */}
-              <div className="absolute -left-4 top-0 w-4 h-4 border-l-2 border-t-2 border-gray-400 rounded-tl-full opacity-50"></div>
-              <div className="absolute -top-2 -right-8 text-xs font-medium text-gray-700 whitespace-nowrap">Door</div>
-            </div>
-          </div>
 
           {/* Furniture Items */}
           {furniture?.map(item => (
             <div
               key={item.id}
-              className="absolute cursor-move bg-gray-200 border-2 border-gray-400 rounded-lg flex items-center justify-center shadow-lg desk-element"
+              className={`absolute cursor-move flex items-center justify-center shadow-lg desk-element ${
+                item.type === 'teacher-desk' ? 'bg-amber-100 border-2 border-amber-300 rounded-lg' :
+                item.type === 'door' ? 'bg-white border-2 border-gray-800' :
+                'bg-gray-200 border-2 border-gray-400 rounded-lg'
+              }`}
               style={{ 
                 left: item.x, 
                 top: item.y, 
-                width: item.width, 
-                height: item.height 
+                width: item.rotation % 180 === 0 ? item.width : item.height,
+                height: item.rotation % 180 === 0 ? item.height : item.width,
+                transform: `rotate(${item.rotation}deg)`
               }}
               ref={(el) => {
                 if (el && window.interact) {
@@ -232,9 +224,26 @@ export function DraggableCanvas({
                 }
               }}
               onDoubleClick={() => onDeleteFurniture(item.id)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                onRotateFurniture(item.id);
+              }}
             >
               <div className="text-center pointer-events-none">
-                <div className="text-xs font-medium text-gray-700">{item.name}</div>
+                {item.type === 'door' && (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <div className="text-lg">🚪</div>
+                  </div>
+                )}
+                {item.type === 'teacher-desk' && (
+                  <>
+                    <Chair className="w-5 h-5 text-amber-700 mx-auto mb-1" />
+                    <div className="text-xs font-medium text-amber-800">Teacher</div>
+                  </>
+                )}
+                {item.type !== 'door' && item.type !== 'teacher-desk' && (
+                  <div className="text-xs font-medium text-gray-700">{item.name}</div>
+                )}
               </div>
             </div>
           ))}
