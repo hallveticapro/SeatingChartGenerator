@@ -152,8 +152,15 @@ export function ConstraintsBuilder({
               </div>
               <Button 
                 onClick={handleAddHardSeat} 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full"
                 size="sm"
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  backgroundColor: '#2563eb', 
+                  color: 'white', 
+                  border: 'none' 
+                }}
               >
                 Add Hard Seat Rule
               </Button>
@@ -203,8 +210,15 @@ export function ConstraintsBuilder({
               </div>
               <Button 
                 onClick={handleAddKeepApart} 
-                className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+                className="w-full"
                 size="sm"
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  backgroundColor: '#ca8a04', 
+                  color: 'white', 
+                  border: 'none' 
+                }}
               >
                 Add Keep Apart Rule
               </Button>
@@ -266,8 +280,15 @@ export function ConstraintsBuilder({
               </div>
               <Button 
                 onClick={handleAddDistance} 
-                className="w-full bg-slate-600 hover:bg-slate-700 text-white"
+                className="w-full"
                 size="sm"
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  backgroundColor: '#475569', 
+                  color: 'white', 
+                  border: 'none' 
+                }}
               >
                 Add Distance Rule
               </Button>

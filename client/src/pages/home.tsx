@@ -274,38 +274,49 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 panel-shadow">
-        <div className="max-w-full px-6 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-full px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
-              <Presentation className="text-blue-600 w-8 h-8" />
-              <h1 className="text-2xl font-bold text-gray-900">Classroom Seating Chart Builder</h1>
+              <Presentation className="text-blue-600 w-6 h-6 sm:w-8 sm:h-8" />
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Classroom Seating Chart Builder</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
               <Button 
                 onClick={handleSaveLayout}
                 variant="outline"
                 size="sm"
+                className="flex-1 sm:flex-none"
+                style={{ opacity: 1, visibility: 'visible', backgroundColor: 'white', color: 'black', border: '1px solid #ccc' }}
               >
                 <Save className="w-4 h-4 mr-2" />
-                Save Layout
+                <span className="mobile-hidden">Save Layout</span>
+                <span className="sm:hidden">Save</span>
               </Button>
               <Button 
                 onClick={handleExportPDF}
                 disabled={isExporting || desks.length === 0}
-                className="button-primary text-white"
                 size="sm"
+                className="flex-1 sm:flex-none"
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  backgroundColor: 'hsl(214, 85%, 55%)', 
+                  color: 'white', 
+                  border: 'none' 
+                }}
               >
                 <FileText className="w-4 h-4 mr-2" />
-                {isExporting ? 'Exporting...' : 'Save as PDF'}
+                <span className="mobile-hidden">{isExporting ? 'Exporting...' : 'Save as PDF'}</span>
+                <span className="sm:hidden">PDF</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] sm:h-[calc(100vh-96px)]">
         {/* Left Panel */}
-        <div className="w-80 bg-white border-r border-gray-200 panel-shadow overflow-y-auto">
+        <div className="w-full lg:w-80 bg-white border-b lg:border-b-0 lg:border-r border-gray-200 panel-shadow overflow-y-auto max-h-96 lg:max-h-none">
           <div className="p-6 space-y-6">
             <StudentListManager
               students={students}
@@ -327,7 +338,14 @@ export default function Home() {
               <Button 
                 onClick={handleGenerateSeatingChart}
                 disabled={isGenerating || students.length === 0 || desks.length === 0}
-                className="w-full button-primary text-white font-semibold py-3"
+                className="w-full font-semibold py-3"
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  backgroundColor: 'hsl(214, 85%, 55%)', 
+                  color: 'white', 
+                  border: 'none' 
+                }}
               >
                 <Sparkles className="w-5 h-5 mr-2" />
                 {isGenerating ? 'Generating...' : 'Generate Seating Chart'}

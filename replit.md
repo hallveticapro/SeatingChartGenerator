@@ -8,6 +8,16 @@ This is a modern web application for creating classroom seating charts with drag
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### January 26, 2025
+- Fixed desk dragging functionality - desks now properly drag and snap to grid without jumping
+- Resolved button visibility issues - all buttons now display correctly without hover requirement
+- Implemented responsive design for mobile and tablet devices
+- Updated door icon to minimal floorplan style with opening arc
+- Changed student list ordering - new students appear at top for easy verification
+- Improved desk text handling with fixed dimensions and proper overflow management
+
 ## System Architecture
 
 ### Frontend Architecture

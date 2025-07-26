@@ -69,43 +69,54 @@ export function DraggableCanvas({
   return (
     <div className="flex-1 flex flex-col">
       {/* Canvas Toolbar */}
-      <div className="bg-white border-b border-gray-200 p-4 panel-shadow">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+      <div className="bg-white border-b border-gray-200 p-2 sm:p-4 panel-shadow">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <Button 
               onClick={() => onAddDesk('rectangular')} 
-              className="button-primary text-white"
               size="sm"
+              style={{ 
+                opacity: 1, 
+                visibility: 'visible', 
+                backgroundColor: 'hsl(214, 85%, 55%)', 
+                color: 'white', 
+                border: 'none' 
+              }}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Desk
+              <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="mobile-hidden">Add Desk</span>
+              <span className="sm:hidden">Add</span>
             </Button>
             <Button 
               onClick={() => selectedDeskId && onDeleteDesk(selectedDeskId)} 
               variant="destructive"
               size="sm"
               disabled={!selectedDeskId}
+              style={{ opacity: 1, visibility: 'visible' }}
             >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete Selected
+              <Trash2 className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="mobile-hidden">Delete Selected</span>
+              <span className="sm:hidden">Delete</span>
             </Button>
-            <div className="w-px h-6 bg-gray-300"></div>
+            <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
             <Button 
               onClick={() => onAddDesk('round')} 
               variant="secondary"
               size="sm"
+              style={{ opacity: 1, visibility: 'visible' }}
             >
-              <Circle className="w-4 h-4 mr-2" />
-              Round Table
+              <Circle className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="mobile-hidden">Round Table</span>
+              <span className="sm:hidden">Round</span>
             </Button>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Chair className="w-4 h-4" />
+          <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm">
+            <div className="flex items-center space-x-1 sm:space-x-2 text-gray-600">
+              <Chair className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>{desks.length} desks</span>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Users className="w-4 h-4" />
+            <div className="flex items-center space-x-1 sm:space-x-2 text-gray-600">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>{assignedCount} assigned</span>
             </div>
           </div>
@@ -117,8 +128,13 @@ export function DraggableCanvas({
         <div 
           ref={canvasRef}
           id="room-canvas" 
-          className="grid-background min-h-full min-w-full relative p-8 cursor-default"
-          style={{ minWidth: '1200px', minHeight: '800px' }}
+          className="grid-background min-h-full min-w-full relative p-4 sm:p-8 cursor-default"
+          style={{ 
+            minWidth: '100%', 
+            minHeight: '100%',
+            width: 'max(100%, 1200px)',
+            height: 'max(100%, 800px)'
+          }}
           onClick={handleCanvasClick}
         >
           {/* Room Elements */}
@@ -203,7 +219,13 @@ export function DraggableCanvas({
               </Button>
               <Button 
                 onClick={handleSaveEdit}
-                className="button-primary"
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  backgroundColor: 'hsl(214, 85%, 55%)', 
+                  color: 'white', 
+                  border: 'none' 
+                }}
               >
                 Save
               </Button>

@@ -69,8 +69,14 @@ export function StudentListManager({
           />
           <Button 
             onClick={handleAddStudent} 
-            className="button-primary"
             size="sm"
+            style={{ 
+              opacity: 1, 
+              visibility: 'visible', 
+              backgroundColor: 'hsl(214, 85%, 55%)', 
+              color: 'white', 
+              border: 'none' 
+            }}
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -95,6 +101,7 @@ export function StudentListManager({
               variant="secondary" 
               className="w-full"
               size="sm"
+              style={{ opacity: 1, visibility: 'visible' }}
             >
               Import Students
             </Button>

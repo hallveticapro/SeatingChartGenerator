@@ -103,14 +103,44 @@
 .button-primary {
   background-color: hsl(var(--primary)) !important;
   color: white !important;
+  border: none !important;
   transition: all 0.2s ease;
   opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .button-primary:hover {
   background-color: hsl(214, 85%, 50%) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px hsla(214, 85%, 55%, 0.3);
+  color: white !important;
+}
+
+/* Fix all button visibility issues */
+button {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Responsive design utilities */
+@media (max-width: 1024px) {
+  .desktop-only {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-hidden {
+    display: none;
+  }
+  
+  .mobile-full {
+    width: 100% !important;
+  }
+  
+  .mobile-stack {
+    flex-direction: column !important;
+  }
 }
 
 .button-primary:focus {
