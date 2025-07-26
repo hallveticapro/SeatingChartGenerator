@@ -141,11 +141,10 @@ export function DraggableCanvas({
 
           {/* Door */}
           <div className="absolute top-1/2 right-8 transform -translate-y-1/2">
-            <div className="bg-gray-100 border-2 border-gray-300 rounded-lg w-16 h-32 flex items-center justify-center shadow-lg">
-              <div className="text-center">
-                <div className="text-lg mb-1">🚪</div>
-                <div className="text-xs font-medium text-gray-700">Door</div>
-              </div>
+            <div className="bg-white border-2 border-gray-800 w-4 h-24 relative">
+              {/* Door swing arc */}
+              <div className="absolute -left-4 top-0 w-4 h-4 border-l-2 border-t-2 border-gray-400 rounded-tl-full opacity-50"></div>
+              <div className="absolute -top-2 -right-8 text-xs font-medium text-gray-700 whitespace-nowrap">Door</div>
             </div>
           </div>
 
@@ -176,10 +175,13 @@ export function DraggableCanvas({
 
       {/* Edit Desk Dialog */}
       <Dialog open={!!editingDesk} onOpenChange={(open) => !open && setEditingDesk(null)}>
-        <DialogContent>
+        <DialogContent aria-describedby="edit-desk-description">
           <DialogHeader>
             <DialogTitle>Edit Desk</DialogTitle>
           </DialogHeader>
+          <p id="edit-desk-description" className="sr-only">
+            Change the number displayed on this desk
+          </p>
           <div className="space-y-4">
             <div>
               <Label htmlFor="desk-number">Desk Number</Label>

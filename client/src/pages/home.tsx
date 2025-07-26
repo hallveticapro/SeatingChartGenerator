@@ -66,7 +66,7 @@ export default function Home() {
       id: generateId(),
       name: finalName
     };
-    setStudents(prev => [...prev, newStudent]);
+    setStudents(prev => [newStudent, ...prev]);
   };
 
   const handleRemoveStudent = (studentId: string) => {
@@ -102,7 +102,7 @@ export default function Home() {
       });
     });
 
-    setStudents(prev => [...prev, ...newStudents]);
+    setStudents(prev => [...newStudents, ...prev]);
     toast({
       title: "Students imported",
       description: `Added ${newStudents.length} students to the list.`
