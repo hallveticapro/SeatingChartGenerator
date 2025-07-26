@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateSeatingChart } from '@/lib/seating-algorithm';
 import { exportToPDF } from '@/lib/pdf-export';
 import { storage } from '@/lib/storage';
-import { Presentation, Save, FileText, Sparkles } from 'lucide-react';
+import { Presentation, Save, FileText, Sparkles, RotateCcw } from 'lucide-react';
 
 export default function Home() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -268,6 +268,26 @@ export default function Home() {
     }
   };
 
+  const handleResetAll = () => {
+    const confirmReset = confirm(
+      "Are you sure you want to reset everything? This will clear all students, desks, and constraints. This action cannot be undone."
+    );
+    
+    if (confirmReset) {
+      setStudents([]);
+      setDesks([]);
+      setConstraints([]);
+      
+      // Clear from localStorage
+      storage.deleteLayout('current');
+      
+      toast({
+        title: "Everything reset",
+        description: "All data has been cleared successfully."
+      });
+    }
+  };
+
   const assignedCount = desks.filter(d => d.assignedStudent).length;
 
   return (
@@ -280,7 +300,24 @@ export default function Home() {
               <Presentation className="text-blue-600 w-6 h-6 sm:w-8 sm:h-8" />
               <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Classroom Seating Chart Builder</h1>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <Button 
+                onClick={handleResetAll}
+                variant="outline"
+                size="sm"
+                className="flex-1 sm:flex-none"
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  backgroundColor: 'white', 
+                  color: '#dc2626', 
+                  border: '1px solid #dc2626' 
+                }}
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                <span className="mobile-hidden">Reset All</span>
+                <span className="sm:hidden">Reset</span>
+              </Button>
               <Button 
                 onClick={handleSaveLayout}
                 variant="outline"

@@ -17,6 +17,7 @@ Preferred communication style: Simple, everyday language.
 - Updated door icon to minimal floorplan style with opening arc
 - Changed student list ordering - new students appear at top for easy verification
 - Improved desk text handling with fixed dimensions and proper overflow management
+- Added reset button to clear all data (students, desks, constraints) with confirmation dialog
 
 ## System Architecture
 
