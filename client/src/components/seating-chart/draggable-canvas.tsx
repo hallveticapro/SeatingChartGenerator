@@ -420,17 +420,17 @@ export function DraggableCanvas({
       <Dialog open={!!assigningDesk} onOpenChange={(open) => !open && setAssigningDesk(null)}>
         <DialogContent aria-describedby="assign-student-description">
           <DialogHeader>
-            <DialogTitle>Assign Student to Desk</DialogTitle>
+            <DialogTitle>Assign to Desk</DialogTitle>
           </DialogHeader>
           <p id="assign-student-description" className="sr-only">
-            Select a student to assign to this desk with a hard seat constraint
+            Select a student to assign to this desk or lock it empty
           </p>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="student-select">Select Student</Label>
+              <Label htmlFor="student-select">Select Student (optional)</Label>
               <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
                 <SelectTrigger id="student-select">
-                  <SelectValue placeholder="Choose a student..." />
+                  <SelectValue placeholder="Choose a student or use Lock Empty..." />
                 </SelectTrigger>
                 <SelectContent>
                   {unassignedStudents.map(student => (
@@ -452,6 +452,25 @@ export function DraggableCanvas({
                 onClick={() => setAssigningDesk(null)}
               >
                 Cancel
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (assigningDesk) {
+                    onLockDeskEmpty(assigningDesk.id);
+                    setAssigningDesk(null);
+                    setSelectedStudentId('');
+                  }
+                }}
+                variant="outline"
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  backgroundColor: 'white', 
+                  color: '#dc2626', 
+                  border: '1px solid #dc2626' 
+                }}
+              >
+                Lock Empty
               </Button>
               <Button 
                 onClick={handleSaveAssignment}

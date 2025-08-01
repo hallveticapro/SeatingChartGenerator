@@ -120,15 +120,15 @@ export default function Home() {
 
   const handleAddDesk = (type: 'rectangular' | 'round') => {
     // Always place new desks starting from top-left for easy discovery
-    const baseX = 50;  
-    const baseY = 50;  
-    const spacing = 120;
+    const baseX = 80;  // Move further from edge
+    const baseY = 80;  // Move further from edge
+    const spacing = 140; // Increase spacing
     
     const newDesk: Desk = {
       id: generateId(),
       number: desks.length + 1,
-      x: baseX + (desks.length % 3) * spacing,
-      y: baseY + Math.floor(desks.length / 3) * 100,
+      x: baseX + (desks.length % 4) * spacing, // 4 per row instead of 3
+      y: baseY + Math.floor(desks.length / 4) * 120, // Vertical spacing
       type
     };
     setDesks(prev => [...prev, newDesk]);

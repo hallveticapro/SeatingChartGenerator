@@ -141,13 +141,7 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit
       }}
       data-desk-id={desk.id}
       onDoubleClick={handleDoubleClick}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        if (!desk.isGroupLabel && !desk.assignedStudent) {
-          // Right-click on empty desk toggles lock state
-          onEdit(desk);
-        }
-      }}
+
     >
       <div className="text-center pointer-events-none px-2 py-1 w-full h-full flex flex-col justify-center">
         {desk.isGroupLabel ? (
