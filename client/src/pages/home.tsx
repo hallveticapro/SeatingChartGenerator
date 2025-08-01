@@ -562,6 +562,22 @@ export default function Home() {
     });
   };
 
+  const handleClearAssignments = () => {
+    // Remove all student assignments from desks
+    setDesks(prev => prev.map(desk => ({
+      ...desk,
+      assignedStudent: undefined
+    })));
+
+    // Remove all hard seat constraints
+    setConstraints(prev => prev.filter(constraint => constraint.type !== 'hard_seat'));
+
+    toast({
+      title: "Assignments cleared",
+      description: "All student assignments and hard seat constraints have been removed."
+    });
+  };
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -641,6 +657,16 @@ export default function Home() {
   };
 
   const assignedCount = desks.filter(d => d.assignedStudent).length;
+  
+  // Add hard constraint information to desks
+  const desksWithConstraintInfo = desks.map(desk => ({
+    ...desk,
+    hasHardConstraint: desk.assignedStudent && constraints.some(constraint => 
+      constraint.type === 'hard_seat' && 
+      constraint.deskId === desk.id && 
+      constraint.studentIds.includes(desk.assignedStudent?.id)
+    )
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -772,7 +798,7 @@ export default function Home() {
 
         {/* Canvas Area */}
         <DraggableCanvas
-          desks={desks}
+          desks={desksWithConstraintInfo}
           deskGroups={deskGroups}
           selectedDeskIds={selectedDeskIds}
           isSelecting={isSelecting}
@@ -790,7 +816,9 @@ export default function Home() {
           onGroupDesks={handleGroupDesks}
           onUngroupDesks={handleUngroupDesks}
           onAssignStudent={handleAssignStudent}
+          onClearAssignments={handleClearAssignments}
           students={students}
+          constraints={constraints}
           assignedCount={assignedCount}
         />
       </div>

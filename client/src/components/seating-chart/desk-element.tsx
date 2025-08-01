@@ -112,12 +112,17 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit
       ? "rounded-full px-3 py-1"
       : "rounded-lg w-30 h-16";
   
+  // Check if this desk has a hard seat constraint - passed as prop
+  const hasHardConstraint = desk.assignedStudent && desk.hasHardConstraint;
+
   const selectedClasses = desk.isGroupLabel
     ? `text-white border-white`
     : isSelected 
       ? "bg-blue-100 border-blue-500" 
+      : hasHardConstraint
+        ? "bg-orange-50 border-orange-400" // Orange for hard assignments
       : desk.assignedStudent 
-        ? "bg-green-50 border-green-300" 
+        ? "bg-green-50 border-green-300"   // Green for regular assignments
         : "bg-white border-gray-300";
 
   return (

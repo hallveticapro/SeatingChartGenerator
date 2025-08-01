@@ -3,7 +3,7 @@ import { Desk, DeskGroup, Student } from '@/types/seating';
 import { DeskElement } from './desk-element';
 import { DeskArrangements } from './desk-arrangements';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Users, Group, Ungroup, Armchair as Chair } from 'lucide-react';
+import { Plus, Trash2, Users, Group, Ungroup, Armchair as Chair, UserX } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +28,9 @@ interface DraggableCanvasProps {
   onGroupDesks: () => void;
   onUngroupDesks: () => void;
   onAssignStudent: (deskId: string, studentId: string) => void;
+  onClearAssignments: () => void;
   students: { id: string; name: string }[];
+  constraints: any[];
   assignedCount: number;
 }
 
@@ -51,7 +53,9 @@ export function DraggableCanvas({
   onGroupDesks,
   onUngroupDesks,
   onAssignStudent,
+  onClearAssignments,
   students,
+  constraints,
   assignedCount
 }: DraggableCanvasProps) {
   const [editingDesk, setEditingDesk] = useState<Desk | null>(null);
@@ -202,6 +206,25 @@ export function DraggableCanvas({
                 </>
               )}
             </Button>
+
+            <Button 
+              onClick={onClearAssignments}
+              disabled={assignedCount === 0}
+              size="sm"
+              variant="outline"
+              style={{ 
+                opacity: 1, 
+                visibility: 'visible', 
+                backgroundColor: 'white', 
+                color: '#dc2626', 
+                border: '1px solid #dc2626' 
+              }}
+            >
+              <UserX className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="mobile-hidden">Clear Assignments</span>
+              <span className="sm:hidden">Clear</span>
+            </Button>
+
             <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
 
             <DeskArrangements onArrangeDesks={onArrangeDesks} />
