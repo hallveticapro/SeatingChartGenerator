@@ -97,6 +97,12 @@ export function DraggableCanvas({
     }
   };
 
+  // Determine if selected desks are all in the same group
+  const selectedDesks = desks.filter(desk => selectedDeskIds.includes(desk.id));
+  const groupIds = [...new Set(selectedDesks.map(desk => desk.groupId).filter(Boolean))];
+  const allInSameGroup = groupIds.length === 1 && selectedDesks.every(desk => desk.groupId === groupIds[0]);
+  const shouldShowUngroup = allInSameGroup && selectedDeskIds.length > 0;
+
 
 
   const handleSaveEdit = () => {
@@ -143,26 +149,25 @@ export function DraggableCanvas({
               <span className="sm:hidden">Delete</span>
             </Button>
             <Button 
-              onClick={onGroupDesks}
+              onClick={shouldShowUngroup ? onUngroupDesks : onGroupDesks}
               variant="outline"
               size="sm"
-              disabled={selectedDeskIds.length < 2}
+              disabled={shouldShowUngroup ? selectedDeskIds.length === 0 : selectedDeskIds.length < 2}
               style={{ opacity: 1, visibility: 'visible' }}
             >
-              <Group className="w-4 h-4 mr-1 sm:mr-2" />
-              <span className="mobile-hidden">Group</span>
-              <span className="sm:hidden">Group</span>
-            </Button>
-            <Button 
-              onClick={onUngroupDesks}
-              variant="outline"
-              size="sm"
-              disabled={selectedDeskIds.length === 0}
-              style={{ opacity: 1, visibility: 'visible' }}
-            >
-              <Ungroup className="w-4 h-4 mr-1 sm:mr-2" />
-              <span className="mobile-hidden">Ungroup</span>
-              <span className="sm:hidden">Ungroup</span>
+              {shouldShowUngroup ? (
+                <>
+                  <Ungroup className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="mobile-hidden">Ungroup</span>
+                  <span className="sm:hidden">Ungroup</span>
+                </>
+              ) : (
+                <>
+                  <Group className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="mobile-hidden">Group</span>
+                  <span className="sm:hidden">Group</span>
+                </>
+              )}
             </Button>
             <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
 
