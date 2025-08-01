@@ -108,13 +108,17 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit
   const baseClasses = "desk-element absolute border-2 shadow-lg flex items-center justify-center cursor-move";
   const shapeClasses = desk.type === 'round' 
     ? "rounded-full w-30 h-30" 
-    : "rounded-lg w-30 h-16";
+    : desk.type === 'group-label'
+      ? "rounded-full px-3 py-1"
+      : "rounded-lg w-30 h-16";
   
-  const selectedClasses = isSelected 
-    ? "bg-blue-100 border-blue-500" 
-    : desk.assignedStudent 
-      ? "bg-green-50 border-green-300" 
-      : "bg-white border-gray-300";
+  const selectedClasses = desk.isGroupLabel
+    ? `text-white border-white`
+    : isSelected 
+      ? "bg-blue-100 border-blue-500" 
+      : desk.assignedStudent 
+        ? "bg-green-50 border-green-300" 
+        : "bg-white border-gray-300";
 
   return (
     <div
@@ -122,35 +126,45 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit
       id={`desk-${desk.id}`}
       className={cn(baseClasses, shapeClasses, selectedClasses)}
       style={{
-        width: desk.type === 'round' ? '120px' : '120px',
-        height: desk.type === 'round' ? '120px' : '64px'
+        width: desk.type === 'round' ? '120px' : desk.type === 'group-label' ? 'auto' : '120px',
+        height: desk.type === 'round' ? '120px' : desk.type === 'group-label' ? 'auto' : '64px',
+        backgroundColor: desk.isGroupLabel ? desk.groupColor : undefined,
+        minWidth: desk.isGroupLabel ? '80px' : undefined
       }}
       data-desk-id={desk.id}
       onDoubleClick={handleDoubleClick}
     >
       <div className="text-center pointer-events-none px-2 py-1 w-full h-full flex flex-col justify-center">
-        <div className="text-xs font-bold text-gray-600 mb-1">
-          {desk.type === 'round' ? `Table ${desk.number}` : `Desk ${desk.number}`}
-        </div>
-        <div 
-          className={cn(
-            "text-xs font-medium leading-tight overflow-hidden",
-            desk.assignedStudent ? "text-blue-600" : "text-gray-400"
-          )}
-          style={{
-            fontSize: desk.assignedStudent?.name && desk.assignedStudent.name.length > 12 ? '10px' : '12px',
-            lineHeight: '1.2'
-          }}
-          title={desk.assignedStudent?.name || 'Unassigned'}
-        >
-          {desk.assignedStudent ? 
-            (desk.assignedStudent.name.length > 15 ? 
-              `${desk.assignedStudent.name.substring(0, 15)}...` : 
-              desk.assignedStudent.name
-            ) : 
-            'Unassigned'
-          }
-        </div>
+        {desk.isGroupLabel ? (
+          <div className="text-sm font-medium text-white">
+            {desk.groupName}
+          </div>
+        ) : (
+          <>
+            <div className="text-xs font-bold text-gray-600 mb-1">
+              {desk.type === 'round' ? `Table ${desk.number}` : `Desk ${desk.number}`}
+            </div>
+            <div 
+              className={cn(
+                "text-xs font-medium leading-tight overflow-hidden",
+                desk.assignedStudent ? "text-blue-600" : "text-gray-400"
+              )}
+              style={{
+                fontSize: desk.assignedStudent?.name && desk.assignedStudent.name.length > 12 ? '10px' : '12px',
+                lineHeight: '1.2'
+              }}
+              title={desk.assignedStudent?.name || 'Unassigned'}
+            >
+              {desk.assignedStudent ? 
+                (desk.assignedStudent.name.length > 15 ? 
+                  `${desk.assignedStudent.name.substring(0, 15)}...` : 
+                  desk.assignedStudent.name
+                ) : 
+                'Unassigned'
+              }
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -211,9 +211,9 @@ export function DraggableCanvas({
 
 
 
-          {/* Group Labels */}
+          {/* Group Labels as Special Desks */}
           {deskGroups.map(group => {
-            const groupDesks = desks.filter(desk => desk.groupId === group.id);
+            const groupDesks = desks.filter(desk => desk.groupId === group.id && !desk.isGroupLabel);
             if (groupDesks.length === 0) return null;
             
             // Calculate group bounds for better centering
@@ -229,29 +229,63 @@ export function DraggableCanvas({
             const centerY = (minY + maxY) / 2;
             const labelY = minY - 35; // Above the group
             
+            // Create a virtual group label desk
+            const groupLabelDesk: Desk = {
+              id: `group-label-${group.id}`,
+              number: 0,
+              x: centerX - 40,
+              y: labelY,
+              type: 'group-label',
+              isGroupLabel: true,
+              groupName: group.name,
+              groupColor: group.color,
+              groupId: group.id
+            };
+            
             return (
-              <div
-                key={group.id}
-                id={`group-label-${group.id}`}
-                className="absolute text-sm font-medium px-3 py-1 rounded-full shadow-lg cursor-move hover:shadow-xl transition-shadow"
-                style={{
-                  left: centerX - 40, // Center the label width
-                  top: labelY,
-                  backgroundColor: group.color,
-                  color: 'white',
-                  zIndex: 1000
+              <DeskElement
+                key={groupLabelDesk.id}
+                desk={groupLabelDesk}
+                isSelected={selectedDeskIds.includes(groupLabelDesk.id)}
+                onSelect={(deskId, ctrlKey) => {
+                  // When group label is selected, select all desks in the group
+                  if (!ctrlKey) {
+                    onDeskSelect(group.deskIds[0], false);
+                    group.deskIds.slice(1).forEach(id => {
+                      onDeskSelect(id, true);
+                    });
+                  }
                 }}
-                onClick={() => {
-                  // Select all desks in the group
-                  onDeskSelect(group.deskIds[0], false);
-                  group.deskIds.slice(1).forEach(deskId => {
-                    onDeskSelect(deskId, true);
+                onMove={(deskId, x, y) => {
+                  // When group label moves, move all desks in the group
+                  const deltaX = x - groupLabelDesk.x;
+                  const deltaY = y - groupLabelDesk.y;
+                  
+                  groupDesks.forEach(desk => {
+                    const newX = desk.x + deltaX;
+                    const newY = desk.y + deltaY;
+                    onMoveDesk(desk.id, newX, newY);
                   });
                 }}
-                title="Drag to move entire group, click to select all desks"
-              >
-                {group.name}
-              </div>
+                onDrag={(deskId, x, y) => {
+                  // During drag, move all group desks in real-time
+                  const deltaX = x - groupLabelDesk.x;
+                  const deltaY = y - groupLabelDesk.y;
+                  
+                  groupDesks.forEach(desk => {
+                    const element = document.getElementById(`desk-${desk.id}`);
+                    if (element) {
+                      const newX = desk.x + deltaX;
+                      const newY = desk.y + deltaY;
+                      element.style.left = `${newX}px`;
+                      element.style.top = `${newY}px`;
+                    }
+                  });
+                }}
+                onEdit={() => {
+                  // Disable editing for group labels
+                }}
+              />
             );
           })}
 

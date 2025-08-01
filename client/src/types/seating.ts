@@ -8,9 +8,12 @@ export interface Desk {
   number: number;
   x: number;
   y: number;
-  type: 'rectangular' | 'round';
+  type: 'rectangular' | 'round' | 'group-label';
   assignedStudent?: Student;
   groupId?: string;
+  isGroupLabel?: boolean;
+  groupName?: string;
+  groupColor?: string;
 }
 
 export interface DeskGroup {
