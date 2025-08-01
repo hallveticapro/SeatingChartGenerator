@@ -58,35 +58,28 @@ export function DraggableCanvas({
   onCanvasMouseUp,
   assignedCount
 }: DraggableCanvasProps) {
-  const [selectedDeskId, setSelectedDeskId] = useState<string | null>(null);
   const [editingDesk, setEditingDesk] = useState<Desk | null>(null);
   const [editNumber, setEditNumber] = useState('');
   const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedDeskId) {
-        onDeleteDesk(selectedDeskId);
-        setSelectedDeskId(null);
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedDeskIds.length > 0) {
+        selectedDeskIds.forEach(deskId => onDeleteDesk(deskId));
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedDeskId, onDeleteDesk]);
+  }, [selectedDeskIds, onDeleteDesk]);
 
   const handleCanvasClick = (event: React.MouseEvent) => {
-    if (event.target === canvasRef.current) {
-      setSelectedDeskId(null);
-    }
+    // Canvas click is now handled by mouse events passed from parent
   };
 
-  const handleDeskEdit = (deskId: string) => {
-    const desk = desks.find(d => d.id === deskId);
-    if (desk) {
-      setEditingDesk(desk);
-      setEditNumber(desk.number.toString());
-    }
+  const handleDeskEdit = (desk: Desk) => {
+    setEditingDesk(desk);
+    setEditNumber(desk.number.toString());
   };
 
   const handleSaveEdit = () => {
@@ -122,14 +115,14 @@ export function DraggableCanvas({
               <span className="sm:hidden">Add</span>
             </Button>
             <Button 
-              onClick={() => selectedDeskId && onDeleteDesk(selectedDeskId)} 
+              onClick={() => selectedDeskIds.forEach(deskId => onDeleteDesk(deskId))} 
               variant="destructive"
               size="sm"
-              disabled={!selectedDeskId}
+              disabled={selectedDeskIds.length === 0}
               style={{ opacity: 1, visibility: 'visible' }}
             >
               <Trash2 className="w-4 h-4 mr-1 sm:mr-2" />
-              <span className="mobile-hidden">Delete Selected</span>
+              <span className="mobile-hidden">Delete Selected ({selectedDeskIds.length})</span>
               <span className="sm:hidden">Delete</span>
             </Button>
             <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
