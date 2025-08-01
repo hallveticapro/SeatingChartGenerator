@@ -255,10 +255,33 @@ export function DraggableCanvas({
                             target.style.cursor = 'grabbing';
                             target.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
                             
-                            // "Lift up" all desks in the group with visual feedback
+                            // Store initial label position
+                            target.dataset.startX = target.style.left;
+                            target.dataset.startY = target.style.top;
+                            target.dataset.totalDx = '0';
+                            target.dataset.totalDy = '0';
+                            
+                            console.log('Group drag start - desks in group:', groupDesks.length);
+                            
+                            // Store initial positions and disable individual desk dragging
                             groupDesks.forEach(desk => {
                               const deskElement = document.getElementById(`desk-${desk.id}`);
+                              console.log(`Looking for desk ${desk.id}:`, deskElement);
                               if (deskElement) {
+                                // Store initial position from current style
+                                const currentLeft = deskElement.style.left || `${desk.x}px`;
+                                const currentTop = deskElement.style.top || `${desk.y}px`;
+                                deskElement.dataset.initialX = currentLeft;
+                                deskElement.dataset.initialY = currentTop;
+                                
+                                console.log(`Desk ${desk.id} initial position:`, currentLeft, currentTop);
+                                
+                                // Disable desk dragging temporarily
+                                if (window.interact && window.interact.isSet(deskElement)) {
+                                  window.interact(deskElement).draggable(false);
+                                }
+                                
+                                // Visual feedback
                                 deskElement.style.zIndex = '1001';
                                 deskElement.style.transform = 'scale(1.05) rotate(2deg)';
                                 deskElement.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
@@ -277,16 +300,26 @@ export function DraggableCanvas({
                             target.style.left = `${newX}px`;
                             target.style.top = `${newY}px`;
                             
+                            // Accumulate total movement
+                            const totalDx = parseFloat(target.dataset.totalDx || '0') + event.dx;
+                            const totalDy = parseFloat(target.dataset.totalDy || '0') + event.dy;
+                            target.dataset.totalDx = totalDx.toString();
+                            target.dataset.totalDy = totalDy.toString();
+                            
+                            console.log('Move delta:', event.dx, event.dy, 'Total:', totalDx, totalDy);
+                            
                             // Move all desks in the group
                             groupDesks.forEach(desk => {
                               const deskElement = document.getElementById(`desk-${desk.id}`);
                               if (deskElement) {
-                                // Get current position from the element's style or fallback to data position
-                                const currentLeft = parseFloat(deskElement.style.left) || desk.x;
-                                const currentTop = parseFloat(deskElement.style.top) || desk.y;
+                                // Get initial position (remove 'px' suffix)
+                                const initialX = parseFloat(deskElement.dataset.initialX || '0');
+                                const initialY = parseFloat(deskElement.dataset.initialY || '0');
                                 
-                                const deskNewX = currentLeft + event.dx;
-                                const deskNewY = currentTop + event.dy;
+                                const deskNewX = initialX + totalDx;
+                                const deskNewY = initialY + totalDy;
+                                
+                                console.log(`Moving desk ${desk.id} from (${initialX},${initialY}) to (${deskNewX},${deskNewY})`);
                                 
                                 deskElement.style.left = `${deskNewX}px`;
                                 deskElement.style.top = `${deskNewY}px`;
@@ -301,10 +334,15 @@ export function DraggableCanvas({
                             target.style.cursor = 'move';
                             target.style.boxShadow = '';
                             
-                            // "Drop" all desks with visual feedback and snap to grid
+                            // "Drop" all desks and re-enable dragging
                             groupDesks.forEach(desk => {
                               const deskElement = document.getElementById(`desk-${desk.id}`);
                               if (deskElement) {
+                                // Re-enable desk dragging
+                                if (window.interact && window.interact.isSet(deskElement)) {
+                                  window.interact(deskElement).draggable(true);
+                                }
+                                
                                 // Reset visual effects
                                 deskElement.style.zIndex = '';
                                 deskElement.style.transform = '';
@@ -320,6 +358,10 @@ export function DraggableCanvas({
                                 
                                 deskElement.style.left = `${snappedX}px`;
                                 deskElement.style.top = `${snappedY}px`;
+                                
+                                // Clean up data attributes
+                                delete deskElement.dataset.initialX;
+                                delete deskElement.dataset.initialY;
                                 
                                 // Update desk data
                                 onMoveDesk(desk.id, snappedX, snappedY);
