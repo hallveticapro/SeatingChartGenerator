@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Desk, FurnitureItem, DeskGroup } from '@/types/seating';
+import { Desk, DeskGroup } from '@/types/seating';
 import { DeskElement } from './desk-element';
 import { DeskArrangements } from './desk-arrangements';
-import { ClassroomFurniture } from './classroom-furniture';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Users, Group, Ungroup, Armchair as Chair } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -12,8 +11,6 @@ import { Label } from '@/components/ui/label';
 interface DraggableCanvasProps {
   desks: Desk[];
   deskGroups: DeskGroup[];
-  furniture: FurnitureItem[];
-  frontLabel: { x: number; y: number; } | null;
   selectedDeskIds: string[];
   isSelecting: boolean;
   selectionStart: { x: number; y: number } | null;
@@ -23,11 +20,6 @@ interface DraggableCanvasProps {
   onMoveDesk: (deskId: string, x: number, y: number) => void;
   onEditDesk: (deskId: string, number: number) => void;
   onArrangeDesks: (desks: Omit<Desk, 'id' | 'number'>[]) => void;
-  onAddFurniture: (type: string, x: number, y: number) => void;
-  onMoveFurniture: (furnitureId: string, x: number, y: number) => void;
-  onDeleteFurniture: (furnitureId: string) => void;
-  onRotateFurniture: (furnitureId: string) => void;
-  onMoveFrontLabel: (x: number, y: number) => void;
   onDeskSelect: (deskId: string, ctrlKey: boolean) => void;
   onCanvasMouseDown: (e: React.MouseEvent) => void;
   onCanvasMouseMove: (e: React.MouseEvent) => void;
@@ -40,8 +32,6 @@ interface DraggableCanvasProps {
 export function DraggableCanvas({
   desks,
   deskGroups,
-  furniture,
-  frontLabel,
   selectedDeskIds,
   isSelecting,
   selectionStart,
@@ -51,11 +41,6 @@ export function DraggableCanvas({
   onMoveDesk,
   onEditDesk,
   onArrangeDesks,
-  onAddFurniture,
-  onMoveFurniture,
-  onDeleteFurniture,
-  onRotateFurniture,
-  onMoveFrontLabel,
   onDeskSelect,
   onCanvasMouseDown,
   onCanvasMouseMove,
@@ -87,6 +72,32 @@ export function DraggableCanvas({
     setEditingDesk(desk);
     setEditNumber(desk.number.toString());
   };
+
+  const handleDragDesk = (deskId: string, x: number, y: number) => {
+    const draggedDesk = desks.find(desk => desk.id === deskId);
+    if (!draggedDesk) return;
+
+    // If the desk is part of a group, move all desks in the group during drag
+    if (draggedDesk.groupId) {
+      const deltaX = x - draggedDesk.x;
+      const deltaY = y - draggedDesk.y;
+
+      // Update all group desks immediately for smooth movement
+      desks.forEach(desk => {
+        if (desk.groupId === draggedDesk.groupId && desk.id !== deskId) {
+          const element = document.getElementById(`desk-${desk.id}`);
+          if (element) {
+            const newX = desk.x + deltaX;
+            const newY = desk.y + deltaY;
+            element.style.left = `${newX}px`;
+            element.style.top = `${newY}px`;
+          }
+        }
+      });
+    }
+  };
+
+
 
   const handleSaveEdit = () => {
     if (editingDesk) {
@@ -156,7 +167,6 @@ export function DraggableCanvas({
             <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
 
             <DeskArrangements onArrangeDesks={onArrangeDesks} />
-            <ClassroomFurniture onAddFurniture={onAddFurniture} />
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm">
             <div className="flex items-center space-x-1 sm:space-x-2 text-gray-600">
@@ -194,98 +204,45 @@ export function DraggableCanvas({
 
 
 
-          {/* Furniture Items */}
-          {furniture?.map(item => (
-            <div
-              key={item.id}
-              className={`absolute cursor-move flex items-center justify-center shadow-lg desk-element ${
-                item.type === 'teacher-desk' ? 'bg-amber-100 border-2 border-amber-300 rounded-lg' :
-                item.type === 'door' ? 'bg-white border-2 border-gray-800' :
-                item.type === 'front-label' ? 'bg-green-100 border border-green-300 rounded px-4 py-1' :
-                'bg-gray-200 border-2 border-gray-400 rounded-lg'
-              }`}
-              style={{ 
-                left: item.x, 
-                top: item.y, 
-                width: item.rotation % 180 === 0 ? item.width : item.height,
-                height: item.rotation % 180 === 0 ? item.height : item.width,
-                transform: `rotate(${item.rotation}deg)`
-              }}
-              ref={(el) => {
-                if (el && window.interact) {
-                  window.interact(el).draggable({
-                    listeners: {
-                      move(event: any) {
-                        const target = event.target;
-                        const x = (parseFloat(target.style.left) || 0) + event.dx;
-                        const y = (parseFloat(target.style.top) || 0) + event.dy;
-                        target.style.left = `${x}px`;
-                        target.style.top = `${y}px`;
-                      },
-                      end(event: any) {
-                        const x = Math.round((parseFloat(event.target.style.left) || 0) / 20) * 20;
-                        const y = Math.round((parseFloat(event.target.style.top) || 0) / 20) * 20;
-                        event.target.style.left = `${x}px`;
-                        event.target.style.top = `${y}px`;
-                        onMoveFurniture(item.id, x, y);
-                      }
-                    }
-                  });
-                }
-              }}
-              onDoubleClick={() => onDeleteFurniture(item.id)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                onRotateFurniture(item.id);
-              }}
-            >
-              <div className="text-center pointer-events-none">
-                {item.type === 'door' && (
-                  <div className="flex items-center justify-center w-full h-full">
-                    <div className="text-xs font-medium text-gray-700">Door</div>
-                  </div>
-                )}
-                {item.type === 'front-label' && (
-                  <div className="flex items-center justify-center w-full h-full">
-                    <div className="text-xs font-medium text-green-800">FRONT OF CLASSROOM</div>
-                  </div>
-                )}
-                {item.type === 'teacher-desk' && (
-                  <>
-                    <Chair className="w-5 h-5 text-amber-700 mx-auto mb-1" />
-                    <div className="text-xs font-medium text-amber-800">Teacher</div>
-                  </>
-                )}
-                {item.type !== 'door' && item.type !== 'teacher-desk' && item.type !== 'front-label' && (
-                  <div className="text-xs font-medium text-gray-700">{item.name}</div>
-                )}
-              </div>
-            </div>
-          ))}
+
 
           {/* Group Labels */}
           {deskGroups.map(group => {
             const groupDesks = desks.filter(desk => desk.groupId === group.id);
             if (groupDesks.length === 0) return null;
             
-            // Calculate group center for label positioning
-            const minX = Math.min(...groupDesks.map(d => d.x));
-            const maxX = Math.max(...groupDesks.map(d => d.x));
-            const minY = Math.min(...groupDesks.map(d => d.y));
+            // Calculate group bounds for better centering
+            const xs = groupDesks.map(d => d.x);
+            const ys = groupDesks.map(d => d.y);
+            const minX = Math.min(...xs);
+            const maxX = Math.max(...xs);
+            const minY = Math.min(...ys);
+            const maxY = Math.max(...ys);
+            
+            // Center the label on the group
             const centerX = (minX + maxX) / 2;
-            const labelY = minY - 30;
+            const centerY = (minY + maxY) / 2;
+            const labelY = minY - 35; // Above the group
             
             return (
               <div
                 key={group.id}
-                className="absolute text-sm font-medium px-2 py-1 rounded shadow-sm pointer-events-none"
+                className="absolute text-sm font-medium px-3 py-1 rounded-full shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
                 style={{
-                  left: centerX - 30,
+                  left: centerX - 40, // Center the label width
                   top: labelY,
                   backgroundColor: group.color,
                   color: 'white',
                   zIndex: 1000
                 }}
+                onClick={() => {
+                  // Select all desks in the group
+                  onDeskSelect(group.deskIds[0], false);
+                  group.deskIds.slice(1).forEach(deskId => {
+                    onDeskSelect(deskId, true);
+                  });
+                }}
+                title="Click to select all desks in this group"
               >
                 {group.name}
               </div>
@@ -300,6 +257,7 @@ export function DraggableCanvas({
               isSelected={selectedDeskIds.includes(desk.id)}
               onSelect={(deskId, ctrlKey) => onDeskSelect(deskId, ctrlKey)}
               onMove={onMoveDesk}
+              onDrag={desk.groupId ? handleDragDesk : undefined}
               onEdit={handleDeskEdit}
             />
           ))}

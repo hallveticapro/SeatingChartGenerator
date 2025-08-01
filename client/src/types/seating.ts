@@ -47,8 +47,6 @@ export interface RoomLayout {
   students: Student[];
   constraints: Constraint[];
   deskGroups: DeskGroup[];
-  furniture: FurnitureItem[];
-  frontLabel: { x: number; y: number; } | null;
   createdAt: Date;
   updatedAt: Date;
 }

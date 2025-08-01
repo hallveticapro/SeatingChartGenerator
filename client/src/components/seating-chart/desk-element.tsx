@@ -13,10 +13,11 @@ interface DeskElementProps {
   isSelected: boolean;
   onSelect: (deskId: string, ctrlKey: boolean) => void;
   onMove: (deskId: string, x: number, y: number) => void;
+  onDrag?: (deskId: string, x: number, y: number) => void;
   onEdit: (desk: Desk) => void;
 }
 
-export function DeskElement({ desk, isSelected, onSelect, onMove, onEdit }: DeskElementProps) {
+export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit }: DeskElementProps) {
   const elementRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,6 +65,11 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onEdit }: Desk
             
             target.style.left = `${newX}px`;
             target.style.top = `${newY}px`;
+            
+            // Call onDrag for smooth group movement during drag
+            if (onDrag) {
+              onDrag(desk.id, newX, newY);
+            }
           },
           end(event: any) {
             const target = event.target;
@@ -93,7 +99,7 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onEdit }: Desk
         interactable.unset();
       }
     };
-  }, [desk.id, desk.x, desk.y, onMove, onSelect]);
+  }, [desk.id, desk.x, desk.y, onMove, onDrag, onSelect]);
 
   const handleDoubleClick = () => {
     onEdit(desk);

@@ -15,8 +15,7 @@ export default function Home() {
   const [desks, setDesks] = useState<Desk[]>([]);
   const [constraints, setConstraints] = useState<Constraint[]>([]);
   const [deskGroups, setDeskGroups] = useState<DeskGroup[]>([]);
-  const [furniture, setFurniture] = useState<FurnitureItem[]>([]);
-  const [frontLabel, setFrontLabel] = useState<{ x: number; y: number; } | null>(null);
+
   const [selectedDeskIds, setSelectedDeskIds] = useState<string[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
@@ -34,23 +33,21 @@ export default function Home() {
       setDesks(latest.desks);
       setConstraints(latest.constraints);
       setDeskGroups(latest.deskGroups || []);
-      setFurniture(latest.furniture || []);
-      setFrontLabel(latest.frontLabel || { x: 400, y: 80 });
+
     }
   }, []);
 
   // Auto-save functionality
   useEffect(() => {
     const saveTimeout = setTimeout(() => {
-      if (students.length > 0 || desks.length > 0 || constraints.length > 0 || furniture.length > 0) {
+      if (students.length > 0 || desks.length > 0 || constraints.length > 0) {
         const layout: RoomLayout = {
           id: 'current',
           name: 'Current Layout',
           students,
           desks,
           constraints,
-          furniture,
-          frontLabel,
+          deskGroups,
           createdAt: new Date(),
           updatedAt: new Date()
         };
@@ -59,7 +56,7 @@ export default function Home() {
     }, 1000);
 
     return () => clearTimeout(saveTimeout);
-  }, [students, desks, constraints, furniture, frontLabel]);
+  }, [students, desks, constraints, deskGroups]);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -303,8 +300,7 @@ export default function Home() {
       students,
       desks,
       constraints,
-      furniture,
-      frontLabel,
+      deskGroups,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -348,7 +344,7 @@ export default function Home() {
 
   const handleResetAll = () => {
     const confirmReset = confirm(
-      "Are you sure you want to reset everything? This will clear all students, desks, constraints, and furniture. This action cannot be undone."
+      "Are you sure you want to reset everything? This will clear all students, desks, constraints, and groups. This action cannot be undone."
     );
     
     if (confirmReset) {
@@ -356,8 +352,6 @@ export default function Home() {
       setDesks([]);
       setConstraints([]);
       setDeskGroups([]);
-      setFurniture([]);
-      setFrontLabel(null);
       
       // Clear from localStorage
       storage.deleteLayout('current');
@@ -369,65 +363,7 @@ export default function Home() {
     }
   };
 
-  const handleAddFurniture = (type: string, x: number, y: number) => {
-    const furnitureNames: { [key: string]: { name: string; width: number; height: number } } = {
-      'teacher-desk': { name: 'Teacher Desk', width: 160, height: 80 },
-      door: { name: 'Door', width: 20, height: 100 },
-      'front-label': { name: 'Front Label', width: 160, height: 30 },
-      bookshelf: { name: 'Bookshelf', width: 40, height: 120 },
-      cabinet: { name: 'Cabinet', width: 80, height: 60 },
-      counter: { name: 'Counter', width: 160, height: 40 },
-      closet: { name: 'Closet', width: 80, height: 80 },
-      refrigerator: { name: 'Refrigerator', width: 60, height: 60 },
-      printer: { name: 'Printer Station', width: 80, height: 60 }
-    };
 
-    const furnitureInfo = furnitureNames[type] || { name: 'Item', width: 80, height: 60 };
-    
-    const newFurniture: FurnitureItem = {
-      id: generateId(),
-      type,
-      x,
-      y,
-      width: furnitureInfo.width,
-      height: furnitureInfo.height,
-      name: furnitureInfo.name,
-      rotation: 0
-    };
-    
-    setFurniture(prev => [...prev, newFurniture]);
-    
-    toast({
-      title: "Furniture added",
-      description: `${furnitureInfo.name} has been added to the classroom.`
-    });
-  };
-
-  const handleMoveFurniture = (furnitureId: string, x: number, y: number) => {
-    setFurniture(prev => prev.map(item => 
-      item.id === furnitureId ? { ...item, x, y } : item
-    ));
-  };
-
-  const handleDeleteFurniture = (furnitureId: string) => {
-    setFurniture(prev => prev.filter(item => item.id !== furnitureId));
-    toast({
-      title: "Furniture removed",
-      description: "The furniture item has been removed."
-    });
-  };
-
-  const handleRotateFurniture = (furnitureId: string) => {
-    setFurniture(prev => prev.map(item => 
-      item.id === furnitureId 
-        ? { ...item, rotation: (item.rotation + 90) % 360 }
-        : item
-    ));
-  };
-
-  const handleMoveFrontLabel = (x: number, y: number) => {
-    setFrontLabel({ x, y });
-  };
 
   const handleDeskSelect = (deskId: string, ctrlKey: boolean) => {
     if (ctrlKey) {
@@ -595,8 +531,7 @@ export default function Home() {
       students,
       desks,
       constraints,
-      furniture,
-      frontLabel,
+      deskGroups,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -633,8 +568,7 @@ export default function Home() {
         setDesks(layout.desks || []);
         setConstraints(layout.constraints || []);
         setDeskGroups(layout.deskGroups || []);
-        setFurniture(layout.furniture || []);
-        setFrontLabel(layout.frontLabel || null);
+
 
         toast({
           title: "Layout imported",
@@ -785,8 +719,6 @@ export default function Home() {
         <DraggableCanvas
           desks={desks}
           deskGroups={deskGroups}
-          furniture={furniture}
-          frontLabel={frontLabel}
           selectedDeskIds={selectedDeskIds}
           isSelecting={isSelecting}
           selectionStart={selectionStart}
@@ -796,11 +728,6 @@ export default function Home() {
           onMoveDesk={handleMoveDesk}
           onEditDesk={handleEditDesk}
           onArrangeDesks={handleArrangeDesks}
-          onAddFurniture={handleAddFurniture}
-          onMoveFurniture={handleMoveFurniture}
-          onDeleteFurniture={handleDeleteFurniture}
-          onRotateFurniture={handleRotateFurniture}
-          onMoveFrontLabel={handleMoveFrontLabel}
           onDeskSelect={handleDeskSelect}
           onCanvasMouseDown={handleCanvasMouseDown}
           onCanvasMouseMove={handleCanvasMouseMove}
