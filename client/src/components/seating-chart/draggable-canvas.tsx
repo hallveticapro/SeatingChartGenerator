@@ -261,20 +261,15 @@ export function DraggableCanvas({
                             target.dataset.totalDx = '0';
                             target.dataset.totalDy = '0';
                             
-                            console.log('Group drag start - desks in group:', groupDesks.length);
-                            
                             // Store initial positions and disable individual desk dragging
                             groupDesks.forEach(desk => {
                               const deskElement = document.getElementById(`desk-${desk.id}`);
-                              console.log(`Looking for desk ${desk.id}:`, deskElement);
                               if (deskElement) {
                                 // Store initial position from current style
                                 const currentLeft = deskElement.style.left || `${desk.x}px`;
                                 const currentTop = deskElement.style.top || `${desk.y}px`;
                                 deskElement.dataset.initialX = currentLeft;
                                 deskElement.dataset.initialY = currentTop;
-                                
-                                console.log(`Desk ${desk.id} initial position:`, currentLeft, currentTop);
                                 
                                 // Disable desk dragging temporarily
                                 if (window.interact && window.interact.isSet(deskElement)) {
@@ -306,8 +301,6 @@ export function DraggableCanvas({
                             target.dataset.totalDx = totalDx.toString();
                             target.dataset.totalDy = totalDy.toString();
                             
-                            console.log('Move delta:', event.dx, event.dy, 'Total:', totalDx, totalDy);
-                            
                             // Move all desks in the group
                             groupDesks.forEach(desk => {
                               const deskElement = document.getElementById(`desk-${desk.id}`);
@@ -318,8 +311,6 @@ export function DraggableCanvas({
                                 
                                 const deskNewX = initialX + totalDx;
                                 const deskNewY = initialY + totalDy;
-                                
-                                console.log(`Moving desk ${desk.id} from (${initialX},${initialY}) to (${deskNewX},${deskNewY})`);
                                 
                                 deskElement.style.left = `${deskNewX}px`;
                                 deskElement.style.top = `${deskNewY}px`;
