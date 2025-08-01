@@ -254,6 +254,18 @@ export function DraggableCanvas({
                             target.style.transform = 'scale(1.05)';
                             target.style.cursor = 'grabbing';
                             target.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
+                            
+                            // "Lift up" all desks in the group with visual feedback
+                            groupDesks.forEach(desk => {
+                              const deskElement = document.getElementById(`desk-${desk.id}`);
+                              if (deskElement) {
+                                deskElement.style.zIndex = '1001';
+                                deskElement.style.transform = 'scale(1.05) rotate(2deg)';
+                                deskElement.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
+                                deskElement.style.opacity = '0.9';
+                                deskElement.style.transition = 'transform 0.2s ease, box-shadow 0.2s ease';
+                              }
+                            });
                           },
                           move(event: any) {
                             const target = event.target;
@@ -269,10 +281,13 @@ export function DraggableCanvas({
                             groupDesks.forEach(desk => {
                               const deskElement = document.getElementById(`desk-${desk.id}`);
                               if (deskElement) {
-                                const deskCurrentX = parseFloat(deskElement.style.left) || desk.x;
-                                const deskCurrentY = parseFloat(deskElement.style.top) || desk.y;
-                                const deskNewX = deskCurrentX + event.dx;
-                                const deskNewY = deskCurrentY + event.dy;
+                                // Get current position from the element's style or fallback to data position
+                                const currentLeft = parseFloat(deskElement.style.left) || desk.x;
+                                const currentTop = parseFloat(deskElement.style.top) || desk.y;
+                                
+                                const deskNewX = currentLeft + event.dx;
+                                const deskNewY = currentTop + event.dy;
+                                
                                 deskElement.style.left = `${deskNewX}px`;
                                 deskElement.style.top = `${deskNewY}px`;
                               }
@@ -286,15 +301,28 @@ export function DraggableCanvas({
                             target.style.cursor = 'move';
                             target.style.boxShadow = '';
                             
-                            // Snap all desks to grid and update their positions
+                            // "Drop" all desks with visual feedback and snap to grid
                             groupDesks.forEach(desk => {
                               const deskElement = document.getElementById(`desk-${desk.id}`);
                               if (deskElement) {
-                                const x = Math.round((parseFloat(deskElement.style.left) || desk.x) / 20) * 20;
-                                const y = Math.round((parseFloat(deskElement.style.top) || desk.y) / 20) * 20;
-                                deskElement.style.left = `${x}px`;
-                                deskElement.style.top = `${y}px`;
-                                onMoveDesk(desk.id, x, y);
+                                // Reset visual effects
+                                deskElement.style.zIndex = '';
+                                deskElement.style.transform = '';
+                                deskElement.style.boxShadow = '';
+                                deskElement.style.opacity = '';
+                                deskElement.style.transition = '';
+                                
+                                // Snap to grid
+                                const currentX = parseFloat(deskElement.style.left) || desk.x;
+                                const currentY = parseFloat(deskElement.style.top) || desk.y;
+                                const snappedX = Math.round(currentX / 20) * 20;
+                                const snappedY = Math.round(currentY / 20) * 20;
+                                
+                                deskElement.style.left = `${snappedX}px`;
+                                deskElement.style.top = `${snappedY}px`;
+                                
+                                // Update desk data
+                                onMoveDesk(desk.id, snappedX, snappedY);
                               }
                             });
                           }
