@@ -35,13 +35,21 @@ function validateConstraints(
   for (const constraint of constraints) {
     switch (constraint.type) {
       case 'hard_seat': {
-        const [studentId] = constraint.studentIds;
-        const assignedDeskId = Object.keys(assignments).find(
-          deskId => assignments[deskId] === studentId
-        );
-        
-        if (assignedDeskId !== constraint.deskId) {
-          violations.push(`Hard seat constraint violated: Student must be at specific desk`);
+        if (constraint.studentIds.length === 0) {
+          // Empty desk constraint - desk should remain empty
+          if (assignments[constraint.deskId!]) {
+            violations.push(`Locked empty desk constraint violated: Desk must remain empty`);
+          }
+        } else {
+          // Student assignment constraint
+          const [studentId] = constraint.studentIds;
+          const assignedDeskId = Object.keys(assignments).find(
+            deskId => assignments[deskId] === studentId
+          );
+          
+          if (assignedDeskId !== constraint.deskId) {
+            violations.push(`Hard seat constraint violated: Student must be at specific desk`);
+          }
         }
         break;
       }
@@ -139,13 +147,22 @@ export function generateSeatingChart(
   // Step 1: Handle hard seat constraints first
   for (const constraint of hardSeatConstraints) {
     if (constraint.type === 'hard_seat' && constraint.deskId) {
-      const [studentId] = constraint.studentIds;
-      assignments[constraint.deskId] = studentId;
-      assignedStudents.add(studentId);
-      
-      const deskIndex = availableDesks.findIndex(d => d.id === constraint.deskId);
-      if (deskIndex >= 0) {
-        availableDesks.splice(deskIndex, 1);
+      if (constraint.studentIds.length === 0) {
+        // Locked empty desk - remove from available desks but don't assign anyone
+        const deskIndex = availableDesks.findIndex(d => d.id === constraint.deskId);
+        if (deskIndex >= 0) {
+          availableDesks.splice(deskIndex, 1);
+        }
+      } else {
+        // Student assignment constraint
+        const [studentId] = constraint.studentIds;
+        assignments[constraint.deskId] = studentId;
+        assignedStudents.add(studentId);
+        
+        const deskIndex = availableDesks.findIndex(d => d.id === constraint.deskId);
+        if (deskIndex >= 0) {
+          availableDesks.splice(deskIndex, 1);
+        }
       }
     }
   }

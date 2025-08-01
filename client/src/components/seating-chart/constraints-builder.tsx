@@ -73,6 +73,9 @@ export function ConstraintsBuilder({
 
     switch (constraint.type) {
       case 'hard_seat':
+        if (constraint.studentIds.length === 0) {
+          return `Desk ${getDeskNumber(constraint.deskId)} → Locked Empty`;
+        }
         return `${getStudentName(constraint.studentIds[0])} → Desk ${getDeskNumber(constraint.deskId)}`;
       case 'keep_apart':
         return `${getStudentName(constraint.studentIds[0])} ↔ ${getStudentName(constraint.studentIds[1])} apart`;
