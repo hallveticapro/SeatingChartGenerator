@@ -83,9 +83,9 @@ export function DeskArrangements({ onArrangeDesks }: DeskArrangementsProps) {
 
   const createSpecialGroupLayout = () => {
     const desks: Omit<Desk, 'id' | 'number'>[] = [];
-    const spacingX = 140; // Spacing within groups
-    const spacingY = 80;  // Spacing within groups
-    const groupSpacingX = 300; // More space between groups
+    const spacingX = 125; // Same spacing as 4 groups of 4 layout
+    const spacingY = 70;  // Same spacing as 4 groups of 4 layout
+    const groupSpacingX = 280; // Space between groups
     const groupSpacingY = 200; // More space between rows of groups
     const startX = 160;
     const startY = 160;
