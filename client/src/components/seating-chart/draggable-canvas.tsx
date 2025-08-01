@@ -227,7 +227,7 @@ export function DraggableCanvas({
             // Center the label on the group
             const centerX = (minX + maxX) / 2;
             const centerY = (minY + maxY) / 2;
-            const labelY = minY - 35; // Above the group
+            const labelY = minY - 50; // Above the group with more space
             
             // Create a virtual group label desk
             const groupLabelDesk: Desk = {
