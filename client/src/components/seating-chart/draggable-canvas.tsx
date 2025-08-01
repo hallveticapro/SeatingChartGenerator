@@ -232,7 +232,8 @@ export function DraggableCanvas({
             return (
               <div
                 key={group.id}
-                className="absolute text-sm font-medium px-3 py-1 rounded-full shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+                id={`group-label-${group.id}`}
+                className="absolute text-sm font-medium px-3 py-1 rounded-full shadow-lg cursor-move hover:shadow-xl transition-shadow"
                 style={{
                   left: centerX - 40, // Center the label width
                   top: labelY,
@@ -240,14 +241,79 @@ export function DraggableCanvas({
                   color: 'white',
                   zIndex: 1000
                 }}
-                onClick={() => {
-                  // Select all desks in the group
-                  onDeskSelect(group.deskIds[0], false);
-                  group.deskIds.slice(1).forEach(deskId => {
-                    onDeskSelect(deskId, true);
-                  });
+                ref={(el) => {
+                  if (el && window.interact) {
+                    window.interact(el)
+                      .draggable({
+                        inertia: false,
+                        listeners: {
+                          start(event: any) {
+                            const target = event.target;
+                            target.style.zIndex = '1001';
+                            target.style.opacity = '0.8';
+                            target.style.transform = 'scale(1.05)';
+                            target.style.cursor = 'grabbing';
+                            target.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
+                          },
+                          move(event: any) {
+                            const target = event.target;
+                            const currentX = parseFloat(target.style.left) || 0;
+                            const currentY = parseFloat(target.style.top) || 0;
+                            const newX = currentX + event.dx;
+                            const newY = currentY + event.dy;
+                            
+                            target.style.left = `${newX}px`;
+                            target.style.top = `${newY}px`;
+                            
+                            // Move all desks in the group
+                            groupDesks.forEach(desk => {
+                              const deskElement = document.getElementById(`desk-${desk.id}`);
+                              if (deskElement) {
+                                const deskCurrentX = parseFloat(deskElement.style.left) || desk.x;
+                                const deskCurrentY = parseFloat(deskElement.style.top) || desk.y;
+                                const deskNewX = deskCurrentX + event.dx;
+                                const deskNewY = deskCurrentY + event.dy;
+                                deskElement.style.left = `${deskNewX}px`;
+                                deskElement.style.top = `${deskNewY}px`;
+                              }
+                            });
+                          },
+                          end(event: any) {
+                            const target = event.target;
+                            target.style.zIndex = '1000';
+                            target.style.opacity = '';
+                            target.style.transform = '';
+                            target.style.cursor = 'move';
+                            target.style.boxShadow = '';
+                            
+                            // Snap all desks to grid and update their positions
+                            groupDesks.forEach(desk => {
+                              const deskElement = document.getElementById(`desk-${desk.id}`);
+                              if (deskElement) {
+                                const x = Math.round((parseFloat(deskElement.style.left) || desk.x) / 20) * 20;
+                                const y = Math.round((parseFloat(deskElement.style.top) || desk.y) / 20) * 20;
+                                deskElement.style.left = `${x}px`;
+                                deskElement.style.top = `${y}px`;
+                                onMoveDesk(desk.id, x, y);
+                              }
+                            });
+                          }
+                        }
+                      })
+                      .on('tap', function(event: any) {
+                        // Prevent drag when clicking for selection
+                        event.preventDefault();
+                        event.stopPropagation();
+                        
+                        // Select all desks in the group
+                        onDeskSelect(group.deskIds[0], false);
+                        group.deskIds.slice(1).forEach(deskId => {
+                          onDeskSelect(deskId, true);
+                        });
+                      });
+                  }
                 }}
-                title="Click to select all desks in this group"
+                title="Drag to move entire group, click to select all desks"
               >
                 {group.name}
               </div>
