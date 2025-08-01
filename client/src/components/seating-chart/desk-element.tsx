@@ -113,12 +113,15 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit
       : "rounded-lg w-30 h-16";
   
   // Check if this desk has a hard seat constraint - passed as prop
-  const hasHardConstraint = desk.assignedStudent && desk.hasHardConstraint;
+  const hasHardConstraint = desk.hasHardConstraint;
+  const isLockedEmpty = desk.isLockedEmpty;
 
   const selectedClasses = desk.isGroupLabel
     ? `text-white border-white`
     : isSelected 
       ? "bg-blue-100 border-blue-500" 
+      : isLockedEmpty
+        ? "bg-red-50 border-red-400"      // Red for locked empty desks
       : hasHardConstraint
         ? "bg-orange-50 border-orange-400" // Orange for hard assignments
       : desk.assignedStudent 
@@ -138,6 +141,13 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit
       }}
       data-desk-id={desk.id}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        if (!desk.isGroupLabel && !desk.assignedStudent) {
+          // Right-click on empty desk toggles lock state
+          onEdit(desk);
+        }
+      }}
     >
       <div className="text-center pointer-events-none px-2 py-1 w-full h-full flex flex-col justify-center">
         {desk.isGroupLabel ? (
@@ -165,7 +175,7 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit
                   `${desk.assignedStudent.name.substring(0, 15)}...` : 
                   desk.assignedStudent.name
                 ) : 
-                'Unassigned'
+                desk.isLockedEmpty ? 'LOCKED EMPTY' : 'Unassigned'
               }
             </div>
           </>

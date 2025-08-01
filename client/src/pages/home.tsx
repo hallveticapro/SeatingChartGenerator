@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateSeatingChart } from '@/lib/seating-algorithm';
 import { exportToPDF } from '@/lib/pdf-export';
 import { storage } from '@/lib/storage';
-import { Presentation, Save, FileText, Sparkles, RotateCcw, Upload } from 'lucide-react';
+import { Presentation, Save, FileText, Sparkles, RotateCcw, Upload, UserX } from 'lucide-react';
 
 export default function Home() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -119,11 +119,16 @@ export default function Home() {
   };
 
   const handleAddDesk = (type: 'rectangular' | 'round') => {
+    // Always place new desks starting from top-left for easy discovery
+    const baseX = 50;  
+    const baseY = 50;  
+    const spacing = 120;
+    
     const newDesk: Desk = {
       id: generateId(),
       number: desks.length + 1,
-      x: 160 + (desks.length % 3) * 160,
-      y: 160 + Math.floor(desks.length / 3) * 100,
+      x: baseX + (desks.length % 3) * spacing,
+      y: baseY + Math.floor(desks.length / 3) * 100,
       type
     };
     setDesks(prev => [...prev, newDesk]);
@@ -566,16 +571,63 @@ export default function Home() {
     // Remove all student assignments from desks
     setDesks(prev => prev.map(desk => ({
       ...desk,
-      assignedStudent: undefined
+      assignedStudent: undefined,
+      isLockedEmpty: false // Also clear any locked empty state
     })));
 
-    // Remove all hard seat constraints
+    // Remove all hard seat constraints (both assigned and empty)
     setConstraints(prev => prev.filter(constraint => constraint.type !== 'hard_seat'));
 
     toast({
       title: "Assignments cleared",
-      description: "All student assignments and hard seat constraints have been removed."
+      description: "All student assignments and locked empty desks have been cleared."
     });
+  };
+
+  const handleLockDeskEmpty = (deskId: string) => {
+    const desk = desks.find(d => d.id === deskId);
+    if (!desk) return;
+
+    if (desk.isLockedEmpty) {
+      // Unlock the desk
+      setDesks(prev => prev.map(d => 
+        d.id === deskId 
+          ? { ...d, isLockedEmpty: false }
+          : d
+      ));
+
+      // Remove the empty constraint
+      setConstraints(prev => prev.filter(c => 
+        !(c.type === 'hard_seat' && c.deskId === deskId && c.studentIds.length === 0)
+      ));
+
+      toast({
+        title: "Desk unlocked",
+        description: "This desk can now be assigned during seating generation."
+      });
+    } else {
+      // Lock the desk as empty
+      setDesks(prev => prev.map(d => 
+        d.id === deskId 
+          ? { ...d, isLockedEmpty: true, assignedStudent: undefined }
+          : d
+      ));
+
+      // Create a hard seat constraint for empty desk
+      const emptyConstraint: Constraint = {
+        id: generateId(),
+        type: 'hard_seat',
+        studentIds: [], // Empty array means no student should sit here
+        deskId: deskId
+      };
+
+      setConstraints(prev => [...prev, emptyConstraint]);
+
+      toast({
+        title: "Desk locked empty",
+        description: "This desk has been locked and will remain empty during seating generation."
+      });
+    }
   };
 
   // Handle keyboard shortcuts
@@ -661,10 +713,15 @@ export default function Home() {
   // Add hard constraint information to desks
   const desksWithConstraintInfo = desks.map(desk => ({
     ...desk,
-    hasHardConstraint: desk.assignedStudent && constraints.some(constraint => 
+    hasHardConstraint: constraints.some(constraint => 
       constraint.type === 'hard_seat' && 
       constraint.deskId === desk.id && 
-      constraint.studentIds.includes(desk.assignedStudent?.id)
+      (
+        // Has assigned student with hard constraint
+        (desk.assignedStudent && constraint.studentIds.includes(desk.assignedStudent.id)) ||
+        // Or is locked empty (empty studentIds array)
+        (constraint.studentIds.length === 0)
+      )
     )
   }));
 
@@ -792,6 +849,23 @@ export default function Home() {
               <p className="text-xs text-gray-500 mt-2 text-center">
                 This will automatically assign students to desks based on your constraints
               </p>
+              
+              <Button 
+                onClick={handleClearAssignments}
+                disabled={assignedCount === 0}
+                variant="outline"
+                className="w-full mt-3"
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  backgroundColor: 'white', 
+                  color: '#dc2626', 
+                  border: '1px solid #dc2626' 
+                }}
+              >
+                <UserX className="w-4 h-4 mr-2" />
+                Clear Assignments
+              </Button>
             </div>
           </div>
         </div>
@@ -816,7 +890,7 @@ export default function Home() {
           onGroupDesks={handleGroupDesks}
           onUngroupDesks={handleUngroupDesks}
           onAssignStudent={handleAssignStudent}
-          onClearAssignments={handleClearAssignments}
+          onLockDeskEmpty={handleLockDeskEmpty}
           students={students}
           constraints={constraints}
           assignedCount={assignedCount}

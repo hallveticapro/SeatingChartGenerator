@@ -15,6 +15,7 @@ export interface Desk {
   groupName?: string;
   groupColor?: string;
   hasHardConstraint?: boolean;
+  isLockedEmpty?: boolean;
 }
 
 export interface DeskGroup {

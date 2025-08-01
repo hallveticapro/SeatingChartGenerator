@@ -28,7 +28,7 @@ interface DraggableCanvasProps {
   onGroupDesks: () => void;
   onUngroupDesks: () => void;
   onAssignStudent: (deskId: string, studentId: string) => void;
-  onClearAssignments: () => void;
+  onLockDeskEmpty: (deskId: string) => void;
   students: { id: string; name: string }[];
   constraints: any[];
   assignedCount: number;
@@ -53,7 +53,7 @@ export function DraggableCanvas({
   onGroupDesks,
   onUngroupDesks,
   onAssignStudent,
-  onClearAssignments,
+  onLockDeskEmpty,
   students,
   constraints,
   assignedCount
@@ -90,6 +90,11 @@ export function DraggableCanvas({
     if (desk.assignedStudent) {
       // If desk already has a student, edit desk number instead
       handleDeskEdit(desk);
+      return;
+    }
+    if (desk.isLockedEmpty) {
+      // If desk is locked empty, unlock it
+      onLockDeskEmpty(desk.id);
       return;
     }
     // For unassigned desks, open student assignment dialog
@@ -207,23 +212,7 @@ export function DraggableCanvas({
               )}
             </Button>
 
-            <Button 
-              onClick={onClearAssignments}
-              disabled={assignedCount === 0}
-              size="sm"
-              variant="outline"
-              style={{ 
-                opacity: 1, 
-                visibility: 'visible', 
-                backgroundColor: 'white', 
-                color: '#dc2626', 
-                border: '1px solid #dc2626' 
-              }}
-            >
-              <UserX className="w-4 h-4 mr-1 sm:mr-2" />
-              <span className="mobile-hidden">Clear Assignments</span>
-              <span className="sm:hidden">Clear</span>
-            </Button>
+
 
             <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
 
