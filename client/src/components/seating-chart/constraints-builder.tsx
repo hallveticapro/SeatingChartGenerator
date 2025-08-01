@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Student, Desk, Constraint } from '@/types/seating';
+import { Student, Desk, Constraint, DeskGroup } from '@/types/seating';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { MapPin, UserX, Ruler, Plus, X } from 'lucide-react';
 interface ConstraintsBuilderProps {
   students: Student[];
   desks: Desk[];
+  deskGroups: DeskGroup[];
   constraints: Constraint[];
   onAddConstraint: (constraint: Omit<Constraint, 'id'>) => void;
   onRemoveConstraint: (constraintId: string) => void;
@@ -18,6 +19,7 @@ interface ConstraintsBuilderProps {
 export function ConstraintsBuilder({
   students,
   desks,
+  deskGroups,
   constraints,
   onAddConstraint,
   onRemoveConstraint

@@ -10,14 +10,23 @@ export interface Desk {
   y: number;
   type: 'rectangular' | 'round';
   assignedStudent?: Student;
+  groupId?: string;
+}
+
+export interface DeskGroup {
+  id: string;
+  name: string;
+  color: string;
+  deskIds: string[];
 }
 
 export interface Constraint {
   id: string;
-  type: 'hard_seat' | 'keep_apart' | 'distance';
+  type: 'hard_seat' | 'keep_apart' | 'distance' | 'must_be_in_group' | 'cannot_be_in_group';
   studentIds: string[];
   deskId?: string;
   minDistance?: number;
+  groupId?: string;
 }
 
 export interface FurnitureItem {
@@ -37,6 +46,7 @@ export interface RoomLayout {
   desks: Desk[];
   students: Student[];
   constraints: Constraint[];
+  deskGroups: DeskGroup[];
   furniture: FurnitureItem[];
   frontLabel: { x: number; y: number; } | null;
   createdAt: Date;

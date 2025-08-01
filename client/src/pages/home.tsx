@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Student, Desk, Constraint, RoomLayout, FurnitureItem } from '@/types/seating';
+import { Student, Desk, Constraint, RoomLayout, FurnitureItem, DeskGroup } from '@/types/seating';
 import { StudentListManager } from '@/components/seating-chart/student-list-manager';
 import { ConstraintsBuilder } from '@/components/seating-chart/constraints-builder';
 import { DraggableCanvas } from '@/components/seating-chart/draggable-canvas';
@@ -14,6 +14,7 @@ export default function Home() {
   const [students, setStudents] = useState<Student[]>([]);
   const [desks, setDesks] = useState<Desk[]>([]);
   const [constraints, setConstraints] = useState<Constraint[]>([]);
+  const [deskGroups, setDeskGroups] = useState<DeskGroup[]>([]);
   const [furniture, setFurniture] = useState<FurnitureItem[]>([]);
   const [frontLabel, setFrontLabel] = useState<{ x: number; y: number; } | null>(null);
   const [selectedDeskIds, setSelectedDeskIds] = useState<string[]>([]);
@@ -32,6 +33,7 @@ export default function Home() {
       setStudents(latest.students);
       setDesks(latest.desks);
       setConstraints(latest.constraints);
+      setDeskGroups(latest.deskGroups || []);
       setFurniture(latest.furniture || []);
       setFrontLabel(latest.frontLabel || { x: 400, y: 80 });
     }
@@ -131,20 +133,62 @@ export default function Home() {
   };
 
   const handleDeleteDesk = (deskId: string) => {
+    // Find the desk being deleted to check group membership
+    const deletedDesk = desks.find(desk => desk.id === deskId);
+    
     setDesks(prev => prev.filter(d => d.id !== deskId));
     setSelectedDeskIds(prev => prev.filter(id => id !== deskId));
     
     // Remove constraints involving this desk
     setConstraints(prev => prev.filter(c => c.deskId !== deskId));
     
+    // If the deleted desk was part of a group, update the group
+    if (deletedDesk?.groupId) {
+      setDeskGroups(prev => prev.map(group => {
+        if (group.id === deletedDesk.groupId) {
+          const updatedDeskIds = group.deskIds.filter(id => id !== deskId);
+          return { ...group, deskIds: updatedDeskIds };
+        }
+        return group;
+      }).filter(group => group.deskIds.length > 1)); // Remove groups with only 1 desk
+
+      // Remove group reference from remaining desks if group becomes too small
+      setDesks(prev => prev.map(desk => {
+        const group = deskGroups.find(g => g.id === desk.groupId);
+        if (group && group.deskIds.length <= 1) {
+          return { ...desk, groupId: undefined };
+        }
+        return desk;
+      }));
+    }
+    
     // Renumber remaining desks
     setDesks(prev => prev.map((desk, index) => ({ ...desk, number: index + 1 })));
   };
 
   const handleMoveDesk = (deskId: string, x: number, y: number) => {
-    setDesks(prev => prev.map(desk => 
-      desk.id === deskId ? { ...desk, x, y } : desk
-    ));
+    setDesks(prev => {
+      const movedDesk = prev.find(desk => desk.id === deskId);
+      if (!movedDesk) return prev;
+
+      // If the desk is part of a group, move all desks in the group
+      if (movedDesk.groupId) {
+        const deltaX = x - movedDesk.x;
+        const deltaY = y - movedDesk.y;
+
+        return prev.map(desk => {
+          if (desk.groupId === movedDesk.groupId) {
+            return { ...desk, x: desk.x + deltaX, y: desk.y + deltaY };
+          }
+          return desk;
+        });
+      }
+
+      // Move single desk
+      return prev.map(desk => 
+        desk.id === deskId ? { ...desk, x, y } : desk
+      );
+    });
   };
 
   const handleEditDesk = (deskId: string, number: number) => {
@@ -311,6 +355,7 @@ export default function Home() {
       setStudents([]);
       setDesks([]);
       setConstraints([]);
+      setDeskGroups([]);
       setFurniture([]);
       setFrontLabel(null);
       
@@ -449,6 +494,100 @@ export default function Home() {
     setSelectionEnd(null);
   };
 
+  // Generate random group colors
+  const getGroupColor = (index: number) => {
+    const colors = [
+      '#3B82F6', '#EF4444', '#10B981', '#F59E0B', 
+      '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
+    ];
+    return colors[index % colors.length];
+  };
+
+  const handleGroupDesks = () => {
+    if (selectedDeskIds.length < 2) {
+      toast({
+        title: "Cannot create group",
+        description: "Please select at least 2 desks to create a group.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Remove selected desks from any existing groups
+    setDeskGroups(prev => prev.map(group => ({
+      ...group,
+      deskIds: group.deskIds.filter(id => !selectedDeskIds.includes(id))
+    })).filter(group => group.deskIds.length > 0));
+
+    // Create new group
+    const newGroup: DeskGroup = {
+      id: generateId(),
+      name: `Group ${deskGroups.length + 1}`,
+      color: getGroupColor(deskGroups.length),
+      deskIds: selectedDeskIds
+    };
+
+    setDeskGroups(prev => [...prev, newGroup]);
+    
+    // Update desks with group reference
+    setDesks(prev => prev.map(desk => 
+      selectedDeskIds.includes(desk.id) 
+        ? { ...desk, groupId: newGroup.id }
+        : desk
+    ));
+
+    setSelectedDeskIds([]);
+
+    toast({
+      title: "Group created",
+      description: `Created ${newGroup.name} with ${selectedDeskIds.length} desks.`
+    });
+  };
+
+  const handleUngroupDesks = () => {
+    if (selectedDeskIds.length === 0) return;
+
+    // Find groups that contain selected desks
+    const affectedGroups = deskGroups.filter(group => 
+      group.deskIds.some(id => selectedDeskIds.includes(id))
+    );
+
+    // Remove selected desks from groups
+    setDeskGroups(prev => prev.map(group => ({
+      ...group,
+      deskIds: group.deskIds.filter(id => !selectedDeskIds.includes(id))
+    })).filter(group => group.deskIds.length > 0));
+
+    // Remove group reference from desks
+    setDesks(prev => prev.map(desk => 
+      selectedDeskIds.includes(desk.id) 
+        ? { ...desk, groupId: undefined }
+        : desk
+    ));
+
+    toast({
+      title: "Desks ungrouped",
+      description: `Removed ${selectedDeskIds.length} desks from their groups.`
+    });
+  };
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'g' && selectedDeskIds.length > 0) {
+        e.preventDefault();
+        handleGroupDesks();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'G' && selectedDeskIds.length > 0) {
+        e.preventDefault();
+        handleUngroupDesks();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedDeskIds, deskGroups]);
+
   const handleSaveLayoutAsJSON = () => {
     const layout: RoomLayout = {
       id: generateId(),
@@ -493,6 +632,7 @@ export default function Home() {
         setStudents(layout.students || []);
         setDesks(layout.desks || []);
         setConstraints(layout.constraints || []);
+        setDeskGroups(layout.deskGroups || []);
         setFurniture(layout.furniture || []);
         setFrontLabel(layout.frontLabel || null);
 
@@ -611,6 +751,7 @@ export default function Home() {
             <ConstraintsBuilder
               students={students}
               desks={desks}
+              deskGroups={deskGroups}
               constraints={constraints}
               onAddConstraint={handleAddConstraint}
               onRemoveConstraint={handleRemoveConstraint}
@@ -643,6 +784,7 @@ export default function Home() {
         {/* Canvas Area */}
         <DraggableCanvas
           desks={desks}
+          deskGroups={deskGroups}
           furniture={furniture}
           frontLabel={frontLabel}
           selectedDeskIds={selectedDeskIds}
@@ -663,6 +805,8 @@ export default function Home() {
           onCanvasMouseDown={handleCanvasMouseDown}
           onCanvasMouseMove={handleCanvasMouseMove}
           onCanvasMouseUp={handleCanvasMouseUp}
+          onGroupDesks={handleGroupDesks}
+          onUngroupDesks={handleUngroupDesks}
           assignedCount={assignedCount}
         />
       </div>

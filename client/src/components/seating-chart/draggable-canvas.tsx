@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { Desk, FurnitureItem } from '@/types/seating';
+import { Desk, FurnitureItem, DeskGroup } from '@/types/seating';
 import { DeskElement } from './desk-element';
 import { DeskArrangements } from './desk-arrangements';
 import { ClassroomFurniture } from './classroom-furniture';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Users, Armchair as Chair } from 'lucide-react';
+import { Plus, Trash2, Users, Group, Ungroup, Armchair as Chair } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface DraggableCanvasProps {
   desks: Desk[];
+  deskGroups: DeskGroup[];
   furniture: FurnitureItem[];
   frontLabel: { x: number; y: number; } | null;
   selectedDeskIds: string[];
@@ -31,11 +32,14 @@ interface DraggableCanvasProps {
   onCanvasMouseDown: (e: React.MouseEvent) => void;
   onCanvasMouseMove: (e: React.MouseEvent) => void;
   onCanvasMouseUp: () => void;
+  onGroupDesks: () => void;
+  onUngroupDesks: () => void;
   assignedCount: number;
 }
 
 export function DraggableCanvas({
   desks,
+  deskGroups,
   furniture,
   frontLabel,
   selectedDeskIds,
@@ -56,6 +60,8 @@ export function DraggableCanvas({
   onCanvasMouseDown,
   onCanvasMouseMove,
   onCanvasMouseUp,
+  onGroupDesks,
+  onUngroupDesks,
   assignedCount
 }: DraggableCanvasProps) {
   const [editingDesk, setEditingDesk] = useState<Desk | null>(null);
@@ -124,6 +130,28 @@ export function DraggableCanvas({
               <Trash2 className="w-4 h-4 mr-1 sm:mr-2" />
               <span className="mobile-hidden">Delete Selected ({selectedDeskIds.length})</span>
               <span className="sm:hidden">Delete</span>
+            </Button>
+            <Button 
+              onClick={onGroupDesks}
+              variant="outline"
+              size="sm"
+              disabled={selectedDeskIds.length < 2}
+              style={{ opacity: 1, visibility: 'visible' }}
+            >
+              <Group className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="mobile-hidden">Group</span>
+              <span className="sm:hidden">Group</span>
+            </Button>
+            <Button 
+              onClick={onUngroupDesks}
+              variant="outline"
+              size="sm"
+              disabled={selectedDeskIds.length === 0}
+              style={{ opacity: 1, visibility: 'visible' }}
+            >
+              <Ungroup className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="mobile-hidden">Ungroup</span>
+              <span className="sm:hidden">Ungroup</span>
             </Button>
             <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
 
@@ -234,6 +262,35 @@ export function DraggableCanvas({
               </div>
             </div>
           ))}
+
+          {/* Group Labels */}
+          {deskGroups.map(group => {
+            const groupDesks = desks.filter(desk => desk.groupId === group.id);
+            if (groupDesks.length === 0) return null;
+            
+            // Calculate group center for label positioning
+            const minX = Math.min(...groupDesks.map(d => d.x));
+            const maxX = Math.max(...groupDesks.map(d => d.x));
+            const minY = Math.min(...groupDesks.map(d => d.y));
+            const centerX = (minX + maxX) / 2;
+            const labelY = minY - 30;
+            
+            return (
+              <div
+                key={group.id}
+                className="absolute text-sm font-medium px-2 py-1 rounded shadow-sm pointer-events-none"
+                style={{
+                  left: centerX - 30,
+                  top: labelY,
+                  backgroundColor: group.color,
+                  color: 'white',
+                  zIndex: 1000
+                }}
+              >
+                {group.name}
+              </div>
+            );
+          })}
 
           {/* Student Desks */}
           {desks.map(desk => (
