@@ -535,6 +535,33 @@ export default function Home() {
     });
   };
 
+  const handleAssignStudent = (deskId: string, studentId: string) => {
+    const student = students.find(s => s.id === studentId);
+    if (!student) return;
+
+    // Update the desk with the assigned student
+    setDesks(prev => prev.map(desk => 
+      desk.id === deskId 
+        ? { ...desk, assignedStudent: student }
+        : desk
+    ));
+
+    // Create a hard seat constraint
+    const hardSeatConstraint: Constraint = {
+      id: generateId(),
+      type: 'hard_seat',
+      studentIds: [studentId],
+      deskId: deskId
+    };
+
+    setConstraints(prev => [...prev, hardSeatConstraint]);
+
+    toast({
+      title: "Student assigned",
+      description: `${student.name} has been assigned to this desk with a hard seat constraint.`
+    });
+  };
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -762,6 +789,8 @@ export default function Home() {
           onCanvasMouseUp={handleCanvasMouseUp}
           onGroupDesks={handleGroupDesks}
           onUngroupDesks={handleUngroupDesks}
+          onAssignStudent={handleAssignStudent}
+          students={students}
           assignedCount={assignedCount}
         />
       </div>

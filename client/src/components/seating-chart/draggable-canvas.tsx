@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Desk, DeskGroup } from '@/types/seating';
+import { Desk, DeskGroup, Student } from '@/types/seating';
 import { DeskElement } from './desk-element';
 import { DeskArrangements } from './desk-arrangements';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Plus, Trash2, Users, Group, Ungroup, Armchair as Chair } from 'lucide-r
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface DraggableCanvasProps {
   desks: Desk[];
@@ -26,6 +27,8 @@ interface DraggableCanvasProps {
   onCanvasMouseUp: () => void;
   onGroupDesks: () => void;
   onUngroupDesks: () => void;
+  onAssignStudent: (deskId: string, studentId: string) => void;
+  students: { id: string; name: string }[];
   assignedCount: number;
 }
 
@@ -47,10 +50,14 @@ export function DraggableCanvas({
   onCanvasMouseUp,
   onGroupDesks,
   onUngroupDesks,
+  onAssignStudent,
+  students,
   assignedCount
 }: DraggableCanvasProps) {
   const [editingDesk, setEditingDesk] = useState<Desk | null>(null);
   const [editNumber, setEditNumber] = useState('');
+  const [assigningDesk, setAssigningDesk] = useState<Desk | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState('');
   const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -69,8 +76,21 @@ export function DraggableCanvas({
   };
 
   const handleDeskEdit = (desk: Desk) => {
+    if (desk.isGroupLabel) return; // Don't edit group labels
     setEditingDesk(desk);
     setEditNumber(desk.number.toString());
+  };
+
+  const handleDeskAssignment = (desk: Desk) => {
+    if (desk.isGroupLabel) return; // Don't assign students to group labels
+    if (desk.assignedStudent) {
+      // If desk already has a student, edit desk number instead
+      handleDeskEdit(desk);
+      return;
+    }
+    // For unassigned desks, open student assignment dialog
+    setAssigningDesk(desk);
+    setSelectedStudentId('');
   };
 
   const handleDragDesk = (deskId: string, x: number, y: number) => {
@@ -115,6 +135,19 @@ export function DraggableCanvas({
       setEditNumber('');
     }
   };
+
+  const handleSaveAssignment = () => {
+    if (assigningDesk && selectedStudentId) {
+      onAssignStudent(assigningDesk.id, selectedStudentId);
+      setAssigningDesk(null);
+      setSelectedStudentId('');
+    }
+  };
+
+  // Get unassigned students for the assignment dialog
+  const unassignedStudents = students?.filter(student => 
+    !desks.some(desk => desk.assignedStudent?.id === student.id)
+  ) || [];
 
   return (
     <div className="flex-1 flex flex-col">
@@ -282,9 +315,7 @@ export function DraggableCanvas({
                     }
                   });
                 }}
-                onEdit={() => {
-                  // Disable editing for group labels
-                }}
+                onEdit={handleDeskAssignment}
               />
             );
           })}
@@ -298,7 +329,7 @@ export function DraggableCanvas({
               onSelect={(deskId, ctrlKey) => onDeskSelect(deskId, ctrlKey)}
               onMove={onMoveDesk}
               onDrag={desk.groupId ? handleDragDesk : undefined}
-              onEdit={handleDeskEdit}
+              onEdit={handleDeskAssignment}
             />
           ))}
 
@@ -367,6 +398,61 @@ export function DraggableCanvas({
                 }}
               >
                 Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Student Dialog */}
+      <Dialog open={!!assigningDesk} onOpenChange={(open) => !open && setAssigningDesk(null)}>
+        <DialogContent aria-describedby="assign-student-description">
+          <DialogHeader>
+            <DialogTitle>Assign Student to Desk</DialogTitle>
+          </DialogHeader>
+          <p id="assign-student-description" className="sr-only">
+            Select a student to assign to this desk with a hard seat constraint
+          </p>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="student-select">Select Student</Label>
+              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                <SelectTrigger id="student-select">
+                  <SelectValue placeholder="Choose a student..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {unassignedStudents.map(student => (
+                    <SelectItem key={student.id} value={student.id}>
+                      {student.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {unassignedStudents.length === 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  All students are already assigned to desks.
+                </p>
+              )}
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setAssigningDesk(null)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveAssignment}
+                disabled={!selectedStudentId}
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  backgroundColor: 'hsl(214, 85%, 55%)', 
+                  color: 'white', 
+                  border: 'none' 
+                }}
+              >
+                Assign Student
               </Button>
             </div>
           </div>
