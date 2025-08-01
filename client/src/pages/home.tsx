@@ -449,6 +449,34 @@ export default function Home() {
       return;
     }
 
+    // Check if all selected desks are already in the same group
+    const selectedDesks = desks.filter(desk => selectedDeskIds.includes(desk.id));
+    const groupIds = [...new Set(selectedDesks.map(desk => desk.groupId).filter(Boolean))];
+    
+    if (groupIds.length === 1 && selectedDesks.every(desk => desk.groupId === groupIds[0])) {
+      // All selected desks are in the same group - ungroup them
+      const groupId = groupIds[0];
+      const group = deskGroups.find(g => g.id === groupId);
+      
+      if (group && group.deskIds.length === selectedDeskIds.length) {
+        // All desks in the group are selected - remove the entire group
+        setDeskGroups(prev => prev.filter(g => g.id !== groupId));
+        setDesks(prev => prev.map(desk => 
+          desk.groupId === groupId 
+            ? { ...desk, groupId: undefined }
+            : desk
+        ));
+        
+        setSelectedDeskIds([]);
+        
+        toast({
+          title: "Group disbanded",
+          description: `${group.name} has been disbanded.`
+        });
+        return;
+      }
+    }
+
     // Remove selected desks from any existing groups
     setDeskGroups(prev => prev.map(group => ({
       ...group,
