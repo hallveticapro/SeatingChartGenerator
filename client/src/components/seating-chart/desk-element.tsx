@@ -119,6 +119,7 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit
   return (
     <div
       ref={elementRef}
+      id={`desk-${desk.id}`}
       className={cn(baseClasses, shapeClasses, selectedClasses)}
       style={{
         width: desk.type === 'round' ? '120px' : '120px',
