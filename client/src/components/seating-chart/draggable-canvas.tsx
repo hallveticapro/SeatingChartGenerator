@@ -99,7 +99,7 @@ export function DraggableCanvas({
 
   // Determine if selected desks are all in the same group
   const selectedDesks = desks.filter(desk => selectedDeskIds.includes(desk.id));
-  const groupIds = [...new Set(selectedDesks.map(desk => desk.groupId).filter(Boolean))];
+  const groupIds = Array.from(new Set(selectedDesks.map(desk => desk.groupId).filter(Boolean)));
   const allInSameGroup = groupIds.length === 1 && selectedDesks.every(desk => desk.groupId === groupIds[0]);
   const shouldShowUngroup = allInSameGroup && selectedDeskIds.length > 0;
 
