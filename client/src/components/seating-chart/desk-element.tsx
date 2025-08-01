@@ -85,7 +85,7 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onEdit }: Desk
         }
       })
       .on('tap', function(event: any) {
-        onSelect(desk.id, event.ctrlKey);
+        onSelect(desk.id, event.ctrlKey || event.metaKey);
       });
 
     return () => {

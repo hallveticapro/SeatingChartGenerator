@@ -132,6 +132,7 @@ export default function Home() {
 
   const handleDeleteDesk = (deskId: string) => {
     setDesks(prev => prev.filter(d => d.id !== deskId));
+    setSelectedDeskIds(prev => prev.filter(id => id !== deskId));
     
     // Remove constraints involving this desk
     setConstraints(prev => prev.filter(c => c.deskId !== deskId));
@@ -404,7 +405,7 @@ export default function Home() {
       setSelectionStart({ x, y });
       setSelectionEnd({ x, y });
       
-      if (!e.ctrlKey) {
+      if (!e.ctrlKey && !e.metaKey) {
         setSelectedDeskIds([]);
       }
     }
@@ -430,11 +431,11 @@ export default function Home() {
                deskCenterY >= minY && deskCenterY <= maxY;
       });
 
-      if (e.ctrlKey) {
+      if (e.ctrlKey || e.metaKey) {
         setSelectedDeskIds(prev => {
           const newIds = selectedDesks.map(d => d.id);
           const combined = [...prev, ...newIds];
-          return [...new Set(combined)];
+          return Array.from(new Set(combined));
         });
       } else {
         setSelectedDeskIds(selectedDesks.map(d => d.id));
