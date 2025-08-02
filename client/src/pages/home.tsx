@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Student, Desk, Constraint, RoomLayout, FurnitureItem, DeskGroup } from '@/types/seating';
+import { Student, Desk, Constraint, RoomLayout, FurnitureItem, DeskGroup, AcademicLevel } from '@/types/seating';
 import { StudentListManager } from '@/components/seating-chart/student-list-manager';
 import { ConstraintsBuilder } from '@/components/seating-chart/constraints-builder';
 import { DraggableCanvas } from '@/components/seating-chart/draggable-canvas';
@@ -66,7 +66,7 @@ export default function Home() {
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
-  const handleAddStudent = (name: string) => {
+  const handleAddStudent = (name: string, academicLevel: AcademicLevel = 'medium-high') => {
     // Check for duplicate names and add suffix if needed
     const existingNames = students.map(s => s.name);
     let finalName = name;
@@ -79,9 +79,16 @@ export default function Home() {
 
     const newStudent: Student = {
       id: generateId(),
-      name: finalName
+      name: finalName,
+      academicLevel
     };
     setStudents(prev => [newStudent, ...prev]);
+  };
+
+  const handleUpdateStudent = (studentId: string, updates: Partial<Student>) => {
+    setStudents(prev => prev.map(student => 
+      student.id === studentId ? { ...student, ...updates } : student
+    ));
   };
 
   const handleRemoveStudent = (studentId: string) => {
@@ -856,6 +863,7 @@ export default function Home() {
               students={students}
               onAddStudent={handleAddStudent}
               onRemoveStudent={handleRemoveStudent}
+              onUpdateStudent={handleUpdateStudent}
               onBulkImport={handleBulkImport}
             />
 
