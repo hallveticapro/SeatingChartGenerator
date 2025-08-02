@@ -5,13 +5,19 @@ declare global {
   }
 }
 
-export async function exportToPDF(canvasElementId: string, filename: string = 'seating-chart.pdf'): Promise<void> {
+export async function exportToPDF(canvasElementId: string): Promise<void> {
   try {
     console.log('Starting PDF export...');
     console.log('Looking for element:', canvasElementId);
+    
+    // Create timestamp for filename
+    const now = new Date();
+    const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `seating-chart-${timestamp}.pdf`;
+    const dateString = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+    
     console.log('html2canvas available:', !!window.html2canvas);
     console.log('jsPDF available:', !!window.jsPDF);
-    console.log('jsPDF object:', window.jsPDF);
     
     // Ensure html2canvas is available
     if (!window.html2canvas) {
@@ -19,61 +25,42 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
     }
     
     // Try to load PDF libraries
-    let useRealPDF = false;
     if (!window.jsPDF && (window as any).loadPDFLibraries) {
       console.log('Attempting to load jsPDF...');
       try {
-        useRealPDF = await (window as any).loadPDFLibraries();
-        if (useRealPDF) {
-          console.log('Real jsPDF loaded successfully');
-        } else {
-          console.log('Using fallback PDF method');
-        }
+        await (window as any).loadPDFLibraries();
+        console.log('PDF libraries loaded successfully');
       } catch (error) {
         console.log('jsPDF loading failed, using fallback method');
-        useRealPDF = false;
       }
     }
 
     const canvas = document.getElementById(canvasElementId);
-    console.log('Found canvas element:', !!canvas, canvas);
+    console.log('Found canvas element:', !!canvas);
     if (!canvas) {
       throw new Error(`Canvas element with ID '${canvasElementId}' not found. Please make sure the seating chart is visible.`);
     }
 
-    // Check canvas dimensions and warn if too large
+    // Get canvas dimensions
     const canvasRect = canvas.getBoundingClientRect();
-    const maxWidth = 2480; // A4 landscape width at 300 DPI
-    const maxHeight = 1748; // A4 landscape height at 300 DPI
+    console.log('Canvas dimensions:', canvasRect.width, 'x', canvasRect.height);
 
-    if (canvasRect.width > maxWidth || canvasRect.height > maxHeight) {
-      const shouldContinue = confirm(
-        'Canvas is larger than A4 size. Consider using landscape orientation or reducing canvas size. Continue anyway?'
-      );
-      if (!shouldContinue) return;
-    }
-
-    // Create canvas from HTML
+    // Create canvas from HTML with higher scale for better quality
     console.log('Starting html2canvas...');
     const htmlCanvas = await window.html2canvas(canvas, {
-      scale: 1, // Reduce scale to prevent memory issues
+      scale: 2, // Higher scale for better text rendering
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
       logging: false,
       width: canvasRect.width,
-      height: canvasRect.height
+      height: canvasRect.height,
+      scrollX: 0,
+      scrollY: 0
     });
     
     console.log('html2canvas completed. Canvas size:', htmlCanvas.width, 'x', htmlCanvas.height);
 
-    // Calculate dimensions for PDF
-    const imgWidth = htmlCanvas.width;
-    const imgHeight = htmlCanvas.height;
-    
-    // Use landscape if width > height
-    const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
-    
     // Create PDF using available method
     if (window.jsPDF && (typeof window.jsPDF === 'object' || typeof window.jsPDF === 'function')) {
       console.log('Using real jsPDF library');
@@ -89,31 +76,108 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
         throw new Error('jsPDF constructor not found');
       }
       
-      console.log('Creating PDF with dimensions:', imgWidth, 'x', imgHeight, 'orientation:', orientation);
+      // Calculate PDF dimensions - use A4 landscape as base
+      const pdfWidth = 297; // A4 width in mm (landscape)
+      const pdfHeight = 210; // A4 height in mm (landscape)
+      const margin = 20; // margin in mm
+      const headerHeight = 15; // header height in mm
+      const footerHeight = 10; // footer height in mm
+      
+      // Available space for the canvas
+      const availableWidth = pdfWidth - (2 * margin);
+      const availableHeight = pdfHeight - (2 * margin) - headerHeight - footerHeight;
+      
+      // Calculate scale to fit canvas within available space
+      const scaleX = availableWidth / (htmlCanvas.width * 0.264583); // Convert px to mm (96 DPI)
+      const scaleY = availableHeight / (htmlCanvas.height * 0.264583);
+      const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+      
+      const imgWidth = (htmlCanvas.width * 0.264583) * scale;
+      const imgHeight = (htmlCanvas.height * 0.264583) * scale;
+      
+      // Center the image
+      const imgX = margin + (availableWidth - imgWidth) / 2;
+      const imgY = margin + headerHeight + (availableHeight - imgHeight) / 2;
+      
+      console.log('Creating PDF with dimensions:', pdfWidth, 'x', pdfHeight, 'mm');
+      console.log('Image will be:', imgWidth, 'x', imgHeight, 'mm at position', imgX, imgY);
+      
       const pdf = new jsPDF({
-        orientation,
-        unit: 'px',
-        format: [imgWidth, imgHeight]
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
       });
 
-      // Add image to PDF
-      const imgData = htmlCanvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // Add header
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Classroom Seating Chart', pdfWidth / 2, margin + 10, { align: 'center' });
+      
+      // Add date/time
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Generated: ${dateString}`, pdfWidth - margin, margin + 5, { align: 'right' });
+
+      // Add the seating chart image
+      const imgData = htmlCanvas.toDataURL('image/png', 1.0);
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth, imgHeight);
+
+      // Add footer
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'italic');
+      pdf.text('Generated using Classroom Seating Chart Builder', pdfWidth / 2, pdfHeight - 5, { align: 'center' });
 
       // Save PDF
       pdf.save(filename);
+      console.log('PDF saved successfully as:', filename);
+      
     } else {
       console.log('Using fallback image download method');
       
-      // Fallback: use the simple PDF creator (actually downloads as PNG)
-      if ((window as any).createSimplePDF) {
-        const simplePdf = await (window as any).createSimplePDF(htmlCanvas, filename);
-        simplePdf.addImage(htmlCanvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
-        simplePdf.save(filename);
-      } else {
-        throw new Error('No PDF creation method available');
-      }
+      // Fallback: Create a composite image with headers and download as PNG
+      const compositeCanvas = document.createElement('canvas');
+      const ctx = compositeCanvas.getContext('2d');
+      if (!ctx) throw new Error('Cannot create canvas context');
+      
+      // Set canvas size with space for headers/footers
+      const padding = 100;
+      compositeCanvas.width = htmlCanvas.width + (padding * 2);
+      compositeCanvas.height = htmlCanvas.height + (padding * 2);
+      
+      // Fill background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+      
+      // Add header
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Classroom Seating Chart', compositeCanvas.width / 2, 40);
+      
+      // Add date
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'right';
+      ctx.fillText(`Generated: ${dateString}`, compositeCanvas.width - 20, 25);
+      
+      // Add the main canvas
+      ctx.drawImage(htmlCanvas, padding, padding);
+      
+      // Add footer
+      ctx.font = 'italic 12px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Generated using Classroom Seating Chart Builder', compositeCanvas.width / 2, compositeCanvas.height - 20);
+      
+      // Download as PNG
+      const link = document.createElement('a');
+      link.href = compositeCanvas.toDataURL('image/png', 1.0);
+      link.download = filename.replace('.pdf', '.png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      console.log('Image saved successfully as:', filename.replace('.pdf', '.png'));
     }
+    
   } catch (error) {
     console.error('PDF export failed:', error);
     throw new Error('Failed to export PDF. Please try again.');

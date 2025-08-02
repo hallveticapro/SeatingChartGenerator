@@ -330,10 +330,10 @@ export default function Home() {
     setIsExporting(true);
 
     try {
-      await exportToPDF('room-canvas', 'seating-chart.pdf');
+      await exportToPDF('room-canvas');
       toast({
         title: "PDF exported",
-        description: "Your seating chart has been downloaded."
+        description: "Your seating chart has been downloaded with timestamp."
       });
     } catch (error) {
       toast({
