@@ -191,7 +191,35 @@ export function generateSeatingChart(
     }
   }
 
-  // Step 2: Assign remaining students using backtracking
+  // Step 2: Pre-validate keep_together constraints for conflicts
+  const keepTogetherConstraints = constraints.filter(c => c.type === 'keep_together');
+  const studentConnections = new Map<string, Set<string>>();
+  
+  // Build a graph of keep_together relationships
+  for (const constraint of keepTogetherConstraints) {
+    const [student1, student2] = constraint.studentIds;
+    if (!studentConnections.has(student1)) {
+      studentConnections.set(student1, new Set());
+    }
+    if (!studentConnections.has(student2)) {
+      studentConnections.set(student2, new Set());
+    }
+    studentConnections.get(student1)!.add(student2);
+    studentConnections.get(student2)!.add(student1);
+  }
+  
+  // Check for impossible keep_together constraint groups (more than 4 students connected)
+  for (const [studentId, connections] of studentConnections) {
+    if (connections.size > 3) {
+      return {
+        success: false,
+        assignments: {},
+        errorMessage: `Student "${students.find(s => s.id === studentId)?.name}" has too many "keep together" constraints. Each student can only be kept together with at most 3 other students to form a valid desk cluster.`
+      };
+    }
+  }
+  
+  // Step 3: Assign remaining students using backtracking
   const remainingStudents = students.filter(s => !assignedStudents.has(s.id));
   
   function backtrack(studentIndex: number, iterations: number): boolean {
@@ -244,14 +272,27 @@ export function generateSeatingChart(
           return remainingStudents.some(s => s.id === student1) && 
                  remainingStudents.some(s => s.id === student2);
         }
+        if (c.type === 'keep_together') {
+          const [student1, student2] = c.studentIds;
+          return remainingStudents.some(s => s.id === student1) && 
+                 remainingStudents.some(s => s.id === student2);
+        }
         return false;
       })
-      .map(c => `Keep apart: ${c.studentIds.join(' and ')}`);
+      .map(c => {
+        if (c.type === 'keep_apart') {
+          return `Keep apart: ${c.studentIds.join(' and ')}`;
+        }
+        if (c.type === 'keep_together') {
+          return `Keep together: ${c.studentIds.join(' and ')}`;
+        }
+        return 'Unknown constraint';
+      });
 
     return {
       success: false,
       assignments: {},
-      errorMessage: 'Unable to generate seating chart that satisfies all constraints. Try reducing constraint complexity or adding more desks.',
+      errorMessage: 'Unable to generate seating chart that satisfies all constraints. This may be due to conflicting keep_together requirements or insufficient desk arrangement. Try reducing constraint complexity or reorganizing desk layout.',
       conflictingConstraints
     };
   }
