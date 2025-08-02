@@ -45,10 +45,10 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
     const canvasRect = canvas.getBoundingClientRect();
     console.log('Canvas dimensions:', canvasRect.width, 'x', canvasRect.height);
 
-    // Create canvas from HTML with optimized settings for PDF
+    // Create canvas from HTML with high resolution for crisp text
     console.log('Starting html2canvas...');
     const htmlCanvas = await window.html2canvas(canvas, {
-      scale: 2.5, // Slightly higher scale for better text quality
+      scale: 4, // High scale for very crisp text
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -58,49 +58,31 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       scrollX: 0,
       scrollY: 0,
       onclone: (clonedDoc: any) => {
-        // Enhance text rendering only in the clone (invisible to user)
-        const clonedCanvas = clonedDoc.getElementById('room-canvas');
-        if (clonedCanvas) {
-          // Scale up the entire canvas for better text quality
-          clonedCanvas.style.transform = 'scale(1.3)';
-          clonedCanvas.style.transformOrigin = 'top left';
-        }
-        
+        // Dramatically enhance text in the clone for PDF quality
         const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
         clonedDesks.forEach((desk: any) => {
-          // Slightly enlarge desks for readability without causing overlap
-          desk.style.width = '110px';
-          desk.style.height = '70px';
-          desk.style.fontSize = '16px';
-          desk.style.fontWeight = 'bold';
-          desk.style.padding = '10px';
-          desk.style.boxSizing = 'border-box';
-          desk.style.display = 'flex';
-          desk.style.flexDirection = 'column';
-          desk.style.alignItems = 'center';
-          desk.style.justifyContent = 'center';
-          desk.style.gap = '4px';
-          
+          // Make text much larger and bolder for PDF
           const textElements = desk.querySelectorAll('div, span, p');
           textElements.forEach((textEl: any, index: number) => {
             if (index === 0) {
-              // Desk number - make it larger and bolder
-              textEl.style.fontSize = '18px';
-              textEl.style.fontWeight = 'bold';
+              // Desk number - make it very large
+              textEl.style.fontSize = '24px';
+              textEl.style.fontWeight = '900';
               textEl.style.color = '#000000';
-              textEl.style.lineHeight = '1';
-            } else {
-              // Student name or "Unassigned" - make it clearer
-              textEl.style.fontSize = '14px';
-              textEl.style.fontWeight = '600';
               textEl.style.lineHeight = '1.2';
-              textEl.style.color = '#333333';
-              textEl.style.textAlign = 'center';
-              textEl.style.wordBreak = 'break-word';
-              textEl.style.maxWidth = '90px';
+              textEl.style.textShadow = '0 0 1px rgba(0,0,0,0.5)';
+            } else {
+              // Student name or "Unassigned" - also much larger
+              textEl.style.fontSize = '20px';
+              textEl.style.fontWeight = '700';
+              textEl.style.lineHeight = '1.3';
+              textEl.style.color = '#222222';
+              textEl.style.textShadow = '0 0 1px rgba(0,0,0,0.3)';
             }
+            textEl.style.fontFamily = 'Arial, sans-serif';
             textEl.style.textRendering = 'optimizeLegibility';
             textEl.style.webkitFontSmoothing = 'antialiased';
+            textEl.style.mozOsxFontSmoothing = 'grayscale';
           });
         });
       }
@@ -168,8 +150,8 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       pdf.setFont('helvetica', 'bold');
       pdf.text('Classroom Seating Chart', pdfWidth / 2, margin + 15, { align: 'center' });
 
-      // Add the seating chart image with compression
-      const imgData = htmlCanvas.toDataURL('image/jpeg', 0.85); // Use JPEG with 85% quality for smaller file size
+      // Add the seating chart image with moderate compression
+      const imgData = htmlCanvas.toDataURL('image/jpeg', 0.92); // Higher quality for text clarity
       pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight);
 
       // Add footer with timestamp
