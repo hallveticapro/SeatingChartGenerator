@@ -13,17 +13,24 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
     console.log('jsPDF available:', !!window.jsPDF);
     console.log('jsPDF object:', window.jsPDF);
     
-    // Wait a bit for libraries to fully load
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    // Ensure html2canvas is available
     if (!window.html2canvas) {
-      console.error('html2canvas not loaded');
-      throw new Error('html2canvas library not loaded. Please refresh the page and try again.');
+      throw new Error('html2canvas library not found. Please refresh the page.');
     }
     
+    // Load jsPDF if not available
+    if (!window.jsPDF && (window as any).loadJsPDF) {
+      console.log('Loading jsPDF dynamically...');
+      try {
+        await (window as any).loadJsPDF();
+      } catch (error) {
+        console.error('Failed to load jsPDF dynamically:', error);
+      }
+    }
+    
+    // Final check for jsPDF
     if (!window.jsPDF) {
-      console.error('jsPDF not loaded');
-      throw new Error('jsPDF library not loaded. Please refresh the page and try again.');
+      throw new Error('jsPDF library not available. Please refresh the page and try again.');
     }
 
     const canvas = document.getElementById(canvasElementId);
