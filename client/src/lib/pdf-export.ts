@@ -61,27 +61,31 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
         // Enhance text rendering only in the clone (invisible to user)
         const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
         clonedDesks.forEach((desk: any) => {
-          // Make desk containers larger for better text space
-          desk.style.minWidth = '140px';
-          desk.style.minHeight = '80px';
+          // Keep original desk size but enhance text within
           desk.style.fontSize = '16px';
           desk.style.fontWeight = 'bold';
+          desk.style.padding = '8px';
+          desk.style.boxSizing = 'border-box';
           
           const textElements = desk.querySelectorAll('div, span, p');
           textElements.forEach((textEl: any, index: number) => {
             if (index === 0) {
-              // Desk number
-              textEl.style.fontSize = '14px';
+              // Desk number - make it larger and bolder
+              textEl.style.fontSize = '16px';
               textEl.style.fontWeight = 'bold';
-              textEl.style.marginBottom = '4px';
+              textEl.style.marginBottom = '2px';
+              textEl.style.color = '#000000';
             } else {
-              // Student name or "Unassigned"
-              textEl.style.fontSize = '13px';
+              // Student name or "Unassigned" - make it clearer
+              textEl.style.fontSize = '14px';
               textEl.style.fontWeight = '600';
-              textEl.style.lineHeight = '1.3';
+              textEl.style.lineHeight = '1.2';
+              textEl.style.color = '#333333';
               textEl.style.wordWrap = 'break-word';
-              textEl.style.overflow = 'visible';
-              textEl.style.whiteSpace = 'normal';
+              textEl.style.overflow = 'hidden';
+              textEl.style.textOverflow = 'ellipsis';
+              textEl.style.whiteSpace = 'nowrap';
+              textEl.style.maxWidth = '100%';
             }
             textEl.style.textRendering = 'optimizeLegibility';
             textEl.style.webkitFontSmoothing = 'antialiased';
