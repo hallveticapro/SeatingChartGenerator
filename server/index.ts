@@ -30,11 +30,16 @@ app.use((req, res, next) => {
       }
 
       // Use dynamic import for log function
-      const { log } =
-        process.env.NODE_ENV === "development"
-          ? await import("./vite")
-          : await import("./static");
-      log(logLine);
+      try {
+        const logModule =
+          process.env.NODE_ENV === "development"
+            ? await import("./vite")
+            : await import("./static");
+        logModule.log(logLine);
+      } catch (error) {
+        // Fallback console.log if imports fail
+        console.log(logLine);
+      }
     }
   });
 
@@ -63,8 +68,15 @@ app.get("/health", (_req: Request, res: Response) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (process.env.NODE_ENV === "development") {
-    const { setupVite } = await import("./vite");
-    await setupVite(app, server);
+    try {
+      const viteModule = await import("./vite");
+      await viteModule.setupVite(app, server);
+    } catch (error) {
+      console.error("Failed to load Vite in development:", error);
+      // Fallback to static serving
+      const { serveStatic } = await import("./static");
+      serveStatic(app);
+    }
   } else {
     const { serveStatic } = await import("./static");
     serveStatic(app);
@@ -81,11 +93,16 @@ app.get("/health", (_req: Request, res: Response) => {
     },
     async () => {
       // Use dynamic import for log function
-      const { log } =
-        process.env.NODE_ENV === "development"
-          ? await import("./vite")
-          : await import("./static");
-      log(`serving on port ${port}`);
+      try {
+        const logModule =
+          process.env.NODE_ENV === "development"
+            ? await import("./vite")
+            : await import("./static");
+        logModule.log(`serving on port ${port}`);
+      } catch (error) {
+        // Fallback console.log if imports fail
+        console.log(`serving on port ${port}`);
+      }
     }
   );
 })();
