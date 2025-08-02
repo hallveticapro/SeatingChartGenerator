@@ -10,19 +10,6 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### February 2, 2025
-- Fixed PDF export by switching from unreliable CDN libraries to npm packages (html2canvas, jsPDF)
-- Optimized PDF output: reduced file size from 14MB to 2-3MB with JPEG compression
-- Enhanced PDF rendering: taller desks (72px), better text wrapping, professional A4 formatting
-- Fixed locked desk constraint synchronization - deleting constraints now properly unlocks desks
-- Improved text display in desk elements with break-word styling for longer student names
-- Added automatic cleanup of orphaned locked desk states on page load
-- Enhanced constraint removal logic to properly handle empty studentIds arrays
-- Added "Keep Together" constraint functionality with green UI theme and Users icon
-- Fixed infinite loop bug in seating algorithm when students have multiple keep_together constraints
-- Implemented conflict detection for impossible constraint groups (max 3 connections per student)
-- Enhanced error reporting to identify conflicting keep_together constraints
-
 ### January 26, 2025
 - Fixed desk dragging functionality - desks now properly drag and snap to grid without jumping
 - Resolved button visibility issues - all buttons now display correctly without hover requirement

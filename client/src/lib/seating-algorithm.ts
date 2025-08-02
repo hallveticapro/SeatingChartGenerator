@@ -74,27 +74,6 @@ function validateConstraints(
         break;
       }
 
-      case 'keep_together': {
-        const [studentId1, studentId2] = constraint.studentIds;
-        const desk1Id = Object.keys(assignments).find(
-          deskId => assignments[deskId] === studentId1
-        );
-        const desk2Id = Object.keys(assignments).find(
-          deskId => assignments[deskId] === studentId2
-        );
-
-        // Only validate if both students are assigned
-        if (desk1Id && desk2Id) {
-          const desk1 = deskMap.get(desk1Id);
-          const desk2 = deskMap.get(desk2Id);
-          
-          if (desk1 && desk2 && !areDesksAdjacent(desk1, desk2)) {
-            violations.push(`Keep together constraint violated: Students are not sitting close enough`);
-          }
-        }
-        break;
-      }
-
       case 'distance': {
         const [studentId1, studentId2] = constraint.studentIds;
         const desk1Id = Object.keys(assignments).find(
@@ -132,34 +111,7 @@ function wouldViolateConstraints(
   constraints: Constraint[]
 ): boolean {
   const testAssignments = { ...currentAssignments, [deskId]: studentId };
-  
-  // Only validate constraints that can actually be violated by this assignment
-  const relevantConstraints = constraints.filter(constraint => {
-    switch (constraint.type) {
-      case 'hard_seat':
-        // Check if this violates a hard seat constraint
-        return constraint.deskId === deskId || constraint.studentIds.includes(studentId);
-      case 'keep_apart':
-        // Only check if both students are assigned
-        const [s1, s2] = constraint.studentIds;
-        return (s1 === studentId && Object.values(testAssignments).includes(s2)) ||
-               (s2 === studentId && Object.values(testAssignments).includes(s1));
-      case 'keep_together':
-        // Only check if both students are assigned
-        const [st1, st2] = constraint.studentIds;
-        return (st1 === studentId && Object.values(testAssignments).includes(st2)) ||
-               (st2 === studentId && Object.values(testAssignments).includes(st1));
-      case 'distance':
-        // Only check if both students are assigned
-        const [d1, d2] = constraint.studentIds;
-        return (d1 === studentId && Object.values(testAssignments).includes(d2)) ||
-               (d2 === studentId && Object.values(testAssignments).includes(d1));
-      default:
-        return false;
-    }
-  });
-  
-  const { valid } = validateConstraints(testAssignments, desks, relevantConstraints);
+  const { valid } = validateConstraints(testAssignments, desks, constraints);
   return !valid;
 }
 
@@ -219,40 +171,7 @@ export function generateSeatingChart(
     }
   }
 
-  // Step 2: Pre-validate keep_together constraints for conflicts
-  const keepTogetherConstraints = constraints.filter(c => c.type === 'keep_together');
-  const studentConnections = new Map<string, Set<string>>();
-  
-  // Build a graph of keep_together relationships
-  for (const constraint of keepTogetherConstraints) {
-    const [student1, student2] = constraint.studentIds;
-    if (!studentConnections.has(student1)) {
-      studentConnections.set(student1, new Set());
-    }
-    if (!studentConnections.has(student2)) {
-      studentConnections.set(student2, new Set());
-    }
-    studentConnections.get(student1)!.add(student2);
-    studentConnections.get(student2)!.add(student1);
-  }
-  
-  // Check for impossible keep_together constraint groups (more than 2 connections)
-  for (const [studentId, connections] of Array.from(studentConnections.entries())) {
-    if (connections.size > 2) {
-      const studentName = students.find(s => s.id === studentId)?.name || 'Unknown';
-      const connectedNames = Array.from(connections).map(id => 
-        students.find(s => s.id === id)?.name || 'Unknown'
-      ).join(', ');
-      
-      return {
-        success: false,
-        assignments: {},
-        errorMessage: `"${studentName}" has too many "keep together" constraints with: ${connectedNames}. Each student can be kept together with at most 2 other students.`
-      };
-    }
-  }
-  
-  // Step 3: Assign remaining students using backtracking
+  // Step 2: Assign remaining students using backtracking
   const remainingStudents = students.filter(s => !assignedStudents.has(s.id));
   
   function backtrack(studentIndex: number, iterations: number): boolean {
@@ -305,27 +224,14 @@ export function generateSeatingChart(
           return remainingStudents.some(s => s.id === student1) && 
                  remainingStudents.some(s => s.id === student2);
         }
-        if (c.type === 'keep_together') {
-          const [student1, student2] = c.studentIds;
-          return remainingStudents.some(s => s.id === student1) && 
-                 remainingStudents.some(s => s.id === student2);
-        }
         return false;
       })
-      .map(c => {
-        if (c.type === 'keep_apart') {
-          return `Keep apart: ${c.studentIds.join(' and ')}`;
-        }
-        if (c.type === 'keep_together') {
-          return `Keep together: ${c.studentIds.join(' and ')}`;
-        }
-        return 'Unknown constraint';
-      });
+      .map(c => `Keep apart: ${c.studentIds.join(' and ')}`);
 
     return {
       success: false,
       assignments: {},
-      errorMessage: 'Unable to generate seating chart that satisfies all constraints. This may be due to conflicting keep_together requirements or insufficient desk arrangement. Try reducing constraint complexity or reorganizing desk layout.',
+      errorMessage: 'Unable to generate seating chart that satisfies all constraints. Try reducing constraint complexity or adding more desks.',
       conflictingConstraints
     };
   }

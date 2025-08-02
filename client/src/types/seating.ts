@@ -27,7 +27,7 @@ export interface DeskGroup {
 
 export interface Constraint {
   id: string;
-  type: 'hard_seat' | 'keep_apart' | 'distance' | 'keep_together' | 'must_be_in_group' | 'cannot_be_in_group';
+  type: 'hard_seat' | 'keep_apart' | 'distance' | 'must_be_in_group' | 'cannot_be_in_group';
   studentIds: string[];
   deskId?: string;
   minDistance?: number;
