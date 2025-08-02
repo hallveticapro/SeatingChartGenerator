@@ -14,7 +14,7 @@ RUN npm ci && npm cache clean --force
 COPY . .
 
 # Build the application  
-RUN npx vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --outfile=dist/index.js
+RUN npx vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js
 
 # Production stage
 FROM node:18-alpine AS production
