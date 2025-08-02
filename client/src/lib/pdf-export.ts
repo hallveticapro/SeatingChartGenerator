@@ -48,7 +48,7 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
     // Create canvas from HTML with optimized settings for PDF
     console.log('Starting html2canvas...');
     const htmlCanvas = await window.html2canvas(canvas, {
-      scale: 2, // Reduced scale to control file size
+      scale: 2.5, // Slightly higher scale for better text quality
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -59,33 +59,45 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       scrollY: 0,
       onclone: (clonedDoc: any) => {
         // Enhance text rendering only in the clone (invisible to user)
+        const clonedCanvas = clonedDoc.getElementById('room-canvas');
+        if (clonedCanvas) {
+          // Scale up the entire canvas for better text quality
+          clonedCanvas.style.transform = 'scale(1.3)';
+          clonedCanvas.style.transformOrigin = 'top left';
+        }
+        
         const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
         clonedDesks.forEach((desk: any) => {
-          // Keep original desk size but enhance text within
+          // Slightly enlarge desks for readability without causing overlap
+          desk.style.width = '110px';
+          desk.style.height = '70px';
           desk.style.fontSize = '16px';
           desk.style.fontWeight = 'bold';
-          desk.style.padding = '8px';
+          desk.style.padding = '10px';
           desk.style.boxSizing = 'border-box';
+          desk.style.display = 'flex';
+          desk.style.flexDirection = 'column';
+          desk.style.alignItems = 'center';
+          desk.style.justifyContent = 'center';
+          desk.style.gap = '4px';
           
           const textElements = desk.querySelectorAll('div, span, p');
           textElements.forEach((textEl: any, index: number) => {
             if (index === 0) {
               // Desk number - make it larger and bolder
-              textEl.style.fontSize = '16px';
+              textEl.style.fontSize = '18px';
               textEl.style.fontWeight = 'bold';
-              textEl.style.marginBottom = '2px';
               textEl.style.color = '#000000';
+              textEl.style.lineHeight = '1';
             } else {
               // Student name or "Unassigned" - make it clearer
               textEl.style.fontSize = '14px';
               textEl.style.fontWeight = '600';
               textEl.style.lineHeight = '1.2';
               textEl.style.color = '#333333';
-              textEl.style.wordWrap = 'break-word';
-              textEl.style.overflow = 'hidden';
-              textEl.style.textOverflow = 'ellipsis';
-              textEl.style.whiteSpace = 'nowrap';
-              textEl.style.maxWidth = '100%';
+              textEl.style.textAlign = 'center';
+              textEl.style.wordBreak = 'break-word';
+              textEl.style.maxWidth = '90px';
             }
             textEl.style.textRendering = 'optimizeLegibility';
             textEl.style.webkitFontSmoothing = 'antialiased';
