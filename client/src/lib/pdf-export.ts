@@ -58,22 +58,34 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       scrollX: 0,
       scrollY: 0,
       onclone: (clonedDoc: any) => {
-        // Make desk containers slightly bigger but keep font sizes the same
+        // Fix text clipping issues in PDF
         const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
         clonedDesks.forEach((desk: any) => {
-          // Increase desk size by 20% for more text space
-          const currentWidth = desk.style.width || '120px';
-          const currentHeight = desk.style.height || '64px';
+          // Remove overflow hidden that clips text
+          desk.style.overflow = 'visible';
           
-          const widthValue = parseInt(currentWidth);
-          const heightValue = parseInt(currentHeight);
+          // Fix text container within desk
+          const textContainer = desk.querySelector('.text-center');
+          if (textContainer) {
+            textContainer.style.overflow = 'visible';
+            textContainer.style.height = 'auto';
+            textContainer.style.minHeight = '100%';
+            textContainer.style.display = 'flex';
+            textContainer.style.flexDirection = 'column';
+            textContainer.style.justifyContent = 'center';
+            textContainer.style.alignItems = 'center';
+            textContainer.style.padding = '8px';
+            textContainer.style.boxSizing = 'border-box';
+          }
           
-          desk.style.width = `${Math.round(widthValue * 1.2)}px`;
-          desk.style.height = `${Math.round(heightValue * 1.2)}px`;
-          
-          // Ensure text stays centered with more padding
-          desk.style.padding = '10px';
-          desk.style.boxSizing = 'border-box';
+          // Fix individual text elements
+          const textElements = desk.querySelectorAll('div');
+          textElements.forEach((textEl: any) => {
+            textEl.style.overflow = 'visible';
+            textEl.style.lineHeight = '1.3';
+            textEl.style.whiteSpace = 'normal';
+            textEl.style.wordWrap = 'break-word';
+          });
         });
       }
     });
