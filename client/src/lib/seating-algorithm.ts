@@ -120,17 +120,21 @@ export function generateSeatingChart(
   students: Student[],
   constraints: Constraint[]
 ): SeatingResult {
-  // Early validation
-  if (students.length > desks.length) {
+  // Count locked empty desks first
+  const hardSeatConstraints = constraints.filter(c => c.type === 'hard_seat');
+  const lockedEmptyDesks = hardSeatConstraints.filter(c => c.studentIds.length === 0).length;
+  const availableDeskCount = desks.length - lockedEmptyDesks;
+  
+  // Early validation with locked desks consideration
+  if (students.length > availableDeskCount) {
     return {
       success: false,
       assignments: {},
-      errorMessage: `Too many students (${students.length}) for available desks (${desks.length}). Please add more desks or remove students.`
+      errorMessage: `Too many students (${students.length}) for available desks (${availableDeskCount}). ${lockedEmptyDesks} desks are locked empty. Please add more desks, remove students, or unlock some desks.`
     };
   }
 
   // Check for impossible constraints
-  const hardSeatConstraints = constraints.filter(c => c.type === 'hard_seat');
   const hardSeatDesks = new Set(hardSeatConstraints.map(c => c.deskId));
   if (hardSeatDesks.size !== hardSeatConstraints.length) {
     return {
@@ -181,22 +185,28 @@ export function generateSeatingChart(
 
     const student = remainingStudents[studentIndex];
     
+    // Get currently available desks (not assigned and not locked)
+    const currentlyAvailableDesks = availableDesks.filter(desk => !assignments[desk.id]);
+    
+    // Early termination: if we don't have enough desks for remaining students
+    if (currentlyAvailableDesks.length < (remainingStudents.length - studentIndex)) {
+      return false;
+    }
+    
     // Shuffle available desks for randomization
-    const shuffledDesks = [...availableDesks].sort(() => Math.random() - 0.5);
+    const shuffledDesks = [...currentlyAvailableDesks].sort(() => Math.random() - 0.5);
 
     for (const desk of shuffledDesks) {
-      if (!assignments[desk.id]) {
-        // Check if this assignment would violate any constraints
-        if (!wouldViolateConstraints(student.id, desk.id, assignments, desks, constraints)) {
-          assignments[desk.id] = student.id;
-          
-          if (backtrack(studentIndex + 1, iterations + 1)) {
-            return true;
-          }
-          
-          // Backtrack
-          delete assignments[desk.id];
+      // Check if this assignment would violate any constraints
+      if (!wouldViolateConstraints(student.id, desk.id, assignments, desks, constraints)) {
+        assignments[desk.id] = student.id;
+        
+        if (backtrack(studentIndex + 1, iterations + 1)) {
+          return true;
         }
+        
+        // Backtrack
+        delete assignments[desk.id];
       }
     }
 
