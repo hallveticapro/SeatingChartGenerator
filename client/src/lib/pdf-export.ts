@@ -16,10 +16,10 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
     const canvasRect = canvas.getBoundingClientRect();
     console.log('Canvas dimensions:', canvasRect.width, 'x', canvasRect.height);
 
-    // Create canvas from HTML with better quality settings
+    // Create canvas from HTML with optimized settings
     console.log('Starting html2canvas...');
     const htmlCanvas = await html2canvas(canvas, {
-      scale: 2, // Higher resolution for better quality
+      scale: 1.5, // Balanced quality vs file size
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -28,7 +28,7 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
       height: canvasRect.height,
       removeContainer: true,
       imageTimeout: 0,
-      foreignObjectRendering: false // Better text rendering
+      foreignObjectRendering: false
     });
     
     console.log('html2canvas completed. Canvas size:', htmlCanvas.width, 'x', htmlCanvas.height);
@@ -66,8 +66,8 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
     });
 
     // Add image to PDF with proper scaling and centering
-    const imgData = htmlCanvas.toDataURL('image/png', 0.95); // Slight compression for smaller file
-    pdf.addImage(imgData, 'PNG', offsetX, offsetY, scaledWidth, scaledHeight);
+    const imgData = htmlCanvas.toDataURL('image/jpeg', 0.85); // Use JPEG with more compression for smaller file
+    pdf.addImage(imgData, 'JPEG', offsetX, offsetY, scaledWidth, scaledHeight);
     
     // Add title
     pdf.setFontSize(16);

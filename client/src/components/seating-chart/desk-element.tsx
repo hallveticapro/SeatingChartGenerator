@@ -135,7 +135,7 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit
       className={cn(baseClasses, shapeClasses, selectedClasses)}
       style={{
         width: desk.type === 'round' ? '120px' : desk.type === 'group-label' ? 'auto' : '120px',
-        height: desk.type === 'round' ? '120px' : desk.type === 'group-label' ? 'auto' : '64px',
+        height: desk.type === 'round' ? '120px' : desk.type === 'group-label' ? 'auto' : '72px', // Slightly taller for longer names
         backgroundColor: desk.isGroupLabel ? desk.groupColor : undefined,
         minWidth: desk.isGroupLabel ? '80px' : undefined
       }}
@@ -155,18 +155,20 @@ export function DeskElement({ desk, isSelected, onSelect, onMove, onDrag, onEdit
             </div>
             <div 
               className={cn(
-                "text-xs font-medium leading-tight overflow-hidden",
+                "text-xs font-medium leading-tight break-words px-1", // Added break-words and padding
                 desk.assignedStudent ? "text-blue-600" : "text-gray-400"
               )}
               style={{
-                fontSize: desk.assignedStudent?.name && desk.assignedStudent.name.length > 12 ? '10px' : '12px',
-                lineHeight: '1.2'
+                fontSize: desk.assignedStudent?.name && desk.assignedStudent.name.length > 12 ? '9px' : '11px',
+                lineHeight: '1.1',
+                wordBreak: 'break-word', // Allow breaking long names
+                hyphens: 'auto'
               }}
-              title={desk.assignedStudent?.name || 'Unassigned'}
+              title={desk.assignedStudent?.name || (desk.isLockedEmpty ? 'Locked Empty' : 'Unassigned')}
             >
               {desk.assignedStudent ? 
-                (desk.assignedStudent.name.length > 15 ? 
-                  `${desk.assignedStudent.name.substring(0, 15)}...` : 
+                (desk.assignedStudent.name.length > 18 ? 
+                  `${desk.assignedStudent.name.substring(0, 16)}...` : 
                   desk.assignedStudent.name
                 ) : 
                 desk.isLockedEmpty ? 'LOCKED EMPTY' : 'Unassigned'
