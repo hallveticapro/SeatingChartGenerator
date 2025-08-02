@@ -33,9 +33,15 @@ export default function Home() {
       setDesks(latest.desks);
       setConstraints(latest.constraints);
       setDeskGroups(latest.deskGroups || []);
-
     }
   }, []);
+
+  // Clean up orphaned locked desks after data loads
+  useEffect(() => {
+    if (desks.length > 0 && constraints.length >= 0) {
+      cleanupOrphanedLockedDesks();
+    }
+  }, [desks.length, constraints.length]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -239,8 +245,8 @@ export default function Home() {
     // Remove the constraint
     setConstraints(prev => prev.filter(c => c.id !== constraintId));
     
-    // If it's a locked empty constraint, unlock the desk
-    if (constraintToRemove?.type === 'hard_seat' && constraintToRemove.studentId === 'locked_empty') {
+    // If it's a locked empty constraint (hard_seat with empty studentIds array), unlock the desk
+    if (constraintToRemove?.type === 'hard_seat' && constraintToRemove.studentIds.length === 0) {
       setDesks(prev => prev.map(desk => 
         desk.id === constraintToRemove.deskId 
           ? { ...desk, isLockedEmpty: false, assignedStudent: undefined }
@@ -581,7 +587,7 @@ export default function Home() {
   };
 
   const handleClearAssignments = () => {
-    // Remove all student assignments from desks
+    // Remove all student assignments from desks and clean up orphaned locked states
     setDesks(prev => prev.map(desk => ({
       ...desk,
       assignedStudent: undefined,
@@ -595,6 +601,26 @@ export default function Home() {
       title: "Assignments cleared",
       description: "All student assignments and locked empty desks have been cleared."
     });
+  };
+
+  // Clean up orphaned locked desk states
+  const cleanupOrphanedLockedDesks = () => {
+    setDesks(prev => prev.map(desk => {
+      if (desk.isLockedEmpty) {
+        // Check if there's a corresponding constraint
+        const hasConstraint = constraints.some(c => 
+          c.type === 'hard_seat' && 
+          c.deskId === desk.id && 
+          c.studentIds.length === 0
+        );
+        
+        if (!hasConstraint) {
+          // Unlock orphaned desk
+          return { ...desk, isLockedEmpty: false };
+        }
+      }
+      return desk;
+    }));
   };
 
   const handleLockDeskEmpty = (deskId: string) => {
