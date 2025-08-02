@@ -92,7 +92,6 @@ function validateConstraints(
             violations.push(`Keep together constraint violated: Students are not sitting close enough`);
           }
         }
-        // If only one student is assigned, the constraint is not yet violated
         break;
       }
 
@@ -133,7 +132,34 @@ function wouldViolateConstraints(
   constraints: Constraint[]
 ): boolean {
   const testAssignments = { ...currentAssignments, [deskId]: studentId };
-  const { valid } = validateConstraints(testAssignments, desks, constraints);
+  
+  // Only validate constraints that can actually be violated by this assignment
+  const relevantConstraints = constraints.filter(constraint => {
+    switch (constraint.type) {
+      case 'hard_seat':
+        // Check if this violates a hard seat constraint
+        return constraint.deskId === deskId || constraint.studentIds.includes(studentId);
+      case 'keep_apart':
+        // Only check if both students are assigned
+        const [s1, s2] = constraint.studentIds;
+        return (s1 === studentId && Object.values(testAssignments).includes(s2)) ||
+               (s2 === studentId && Object.values(testAssignments).includes(s1));
+      case 'keep_together':
+        // Only check if both students are assigned
+        const [st1, st2] = constraint.studentIds;
+        return (st1 === studentId && Object.values(testAssignments).includes(st2)) ||
+               (st2 === studentId && Object.values(testAssignments).includes(st1));
+      case 'distance':
+        // Only check if both students are assigned
+        const [d1, d2] = constraint.studentIds;
+        return (d1 === studentId && Object.values(testAssignments).includes(d2)) ||
+               (d2 === studentId && Object.values(testAssignments).includes(d1));
+      default:
+        return false;
+    }
+  });
+  
+  const { valid } = validateConstraints(testAssignments, desks, relevantConstraints);
   return !valid;
 }
 
@@ -210,10 +236,9 @@ export function generateSeatingChart(
     studentConnections.get(student2)!.add(student1);
   }
   
-  // Check for impossible keep_together constraint groups
+  // Check for impossible keep_together constraint groups (more than 2 connections)
   for (const [studentId, connections] of studentConnections) {
-    if (connections.size > 1) {
-      // Any student with more than 1 keep_together constraint creates complexity
+    if (connections.size > 2) {
       const studentName = students.find(s => s.id === studentId)?.name || 'Unknown';
       const connectedNames = Array.from(connections).map(id => 
         students.find(s => s.id === id)?.name || 'Unknown'
@@ -222,7 +247,7 @@ export function generateSeatingChart(
       return {
         success: false,
         assignments: {},
-        errorMessage: `"${studentName}" has multiple "keep together" constraints with: ${connectedNames}. This creates impossible seating requirements. Please use only one "keep together" constraint per student.`
+        errorMessage: `"${studentName}" has too many "keep together" constraints with: ${connectedNames}. Each student can be kept together with at most 2 other students.`
       };
     }
   }
