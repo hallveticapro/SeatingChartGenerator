@@ -1,4 +1,4 @@
-import { Desk, Student, Constraint, SeatingResult, AcademicLevel } from '@/types/seating';
+import { Desk, Student, Constraint, SeatingResult } from '@/types/seating';
 
 const MAX_ITERATIONS = 50000;
 
@@ -74,26 +74,6 @@ function validateConstraints(
         break;
       }
 
-      case 'keep_together': {
-        const [studentId1, studentId2] = constraint.studentIds;
-        const desk1Id = Object.keys(assignments).find(
-          deskId => assignments[deskId] === studentId1
-        );
-        const desk2Id = Object.keys(assignments).find(
-          deskId => assignments[deskId] === studentId2
-        );
-
-        if (desk1Id && desk2Id) {
-          const desk1 = deskMap.get(desk1Id);
-          const desk2 = deskMap.get(desk2Id);
-          
-          if (desk1 && desk2 && !areDesksAdjacent(desk1, desk2)) {
-            violations.push(`Keep together constraint violated: Students are not sitting close enough`);
-          }
-        }
-        break;
-      }
-
       case 'distance': {
         const [studentId1, studentId2] = constraint.studentIds;
         const desk1Id = Object.keys(assignments).find(
@@ -133,75 +113,6 @@ function wouldViolateConstraints(
   const testAssignments = { ...currentAssignments, [deskId]: studentId };
   const { valid } = validateConstraints(testAssignments, desks, constraints);
   return !valid;
-}
-
-// Convert academic level to numeric value for Kagan pairing (high=4, medium-high=3, medium-low=2, low=1)
-function academicLevelToNumber(level?: AcademicLevel): number {
-  switch (level) {
-    case 'high': return 4;
-    case 'medium-high': return 3;
-    case 'medium-low': return 2;
-    case 'low': return 1;
-    default: return 3; // Default to medium-high
-  }
-}
-
-// Calculate academic compatibility score for two students (Kagan methodology prefers high/low pairs)
-function getAcademicCompatibilityScore(student1: Student, student2: Student): number {
-  const level1 = academicLevelToNumber(student1.academicLevel);
-  const level2 = academicLevelToNumber(student2.academicLevel);
-  
-  // Kagan methodology: High performs best with Low, Medium-High with Medium-Low
-  const levelDiff = Math.abs(level1 - level2);
-  
-  // Perfect pairs: High-Low (4-1=3) and Medium-High-Medium-Low (3-2=1)
-  if (levelDiff === 3 || levelDiff === 1) {
-    return 100; // Highest compatibility
-  }
-  
-  // Good pairs: High-Medium-Low (4-2=2) and Medium-High-Low (3-1=2)
-  if (levelDiff === 2) {
-    return 75; // Good compatibility
-  }
-  
-  // Same level pairs are acceptable but not optimal
-  if (levelDiff === 0) {
-    return 50; // Neutral compatibility
-  }
-  
-  return 25; // Lower compatibility for other combinations
-}
-
-// Score a desk placement based on academic level pairing
-function scoreDeskPlacement(
-  studentId: string,
-  deskId: string,
-  students: Student[],
-  desks: Desk[],
-  currentAssignments: Record<string, string>
-): number {
-  const student = students.find(s => s.id === studentId);
-  if (!student) return 0;
-  
-  const desk = desks.find(d => d.id === deskId);
-  if (!desk) return 0;
-  
-  let score = 0;
-  
-  // Find adjacent desks and their assigned students
-  const adjacentDesks = desks.filter(d => d.id !== deskId && areDesksAdjacent(desk, d));
-  
-  for (const adjDesk of adjacentDesks) {
-    const adjStudentId = currentAssignments[adjDesk.id];
-    if (adjStudentId) {
-      const adjStudent = students.find(s => s.id === adjStudentId);
-      if (adjStudent) {
-        score += getAcademicCompatibilityScore(student, adjStudent);
-      }
-    }
-  }
-  
-  return score;
 }
 
 export function generateSeatingChart(
@@ -282,19 +193,10 @@ export function generateSeatingChart(
       return false;
     }
     
-    // Score and sort desks by academic level compatibility
-    const scoredDesks = currentlyAvailableDesks.map(desk => ({
-      desk,
-      score: scoreDeskPlacement(student.id, desk.id, students, desks, assignments)
-    }));
-    
-    // Sort by score (highest first), then randomize ties
-    scoredDesks.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return Math.random() - 0.5;
-    });
+    // Shuffle available desks for randomization
+    const shuffledDesks = [...currentlyAvailableDesks].sort(() => Math.random() - 0.5);
 
-    for (const { desk } of scoredDesks) {
+    for (const desk of shuffledDesks) {
       // Check if this assignment would violate any constraints
       if (!wouldViolateConstraints(student.id, desk.id, assignments, desks, constraints)) {
         assignments[desk.id] = student.id;

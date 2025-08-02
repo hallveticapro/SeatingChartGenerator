@@ -1,58 +1,33 @@
 import { useState } from 'react';
-import { Student, AcademicLevel } from '@/types/seating';
+import { Student } from '@/types/seating';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, X, Upload, GraduationCap } from 'lucide-react';
+import { Plus, X, Upload } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface StudentListManagerProps {
   students: Student[];
-  onAddStudent: (name: string, academicLevel?: AcademicLevel) => void;
+  onAddStudent: (name: string) => void;
   onRemoveStudent: (studentId: string) => void;
-  onUpdateStudent: (studentId: string, updates: Partial<Student>) => void;
   onBulkImport: (names: string[]) => void;
 }
 
 export function StudentListManager({ 
   students, 
   onAddStudent, 
-  onRemoveStudent,
-  onUpdateStudent,
+  onRemoveStudent, 
   onBulkImport 
 }: StudentListManagerProps) {
   const [newStudentName, setNewStudentName] = useState('');
-  const [newStudentLevel, setNewStudentLevel] = useState<AcademicLevel>('medium-high');
   const [bulkImportText, setBulkImportText] = useState('');
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
 
   const handleAddStudent = () => {
     if (newStudentName.trim()) {
-      onAddStudent(newStudentName.trim(), newStudentLevel);
+      onAddStudent(newStudentName.trim());
       setNewStudentName('');
-      setNewStudentLevel('medium-high');
-    }
-  };
-
-  const getAcademicLevelColor = (level?: AcademicLevel) => {
-    switch (level) {
-      case 'high': return 'bg-green-600';
-      case 'medium-high': return 'bg-blue-600'; 
-      case 'medium-low': return 'bg-yellow-600';
-      case 'low': return 'bg-red-600';
-      default: return 'bg-gray-600';
-    }
-  };
-
-  const getAcademicLevelLabel = (level?: AcademicLevel) => {
-    switch (level) {
-      case 'high': return 'H';
-      case 'medium-high': return 'MH';
-      case 'medium-low': return 'ML';
-      case 'low': return 'L';
-      default: return '?';
     }
   };
 
@@ -92,17 +67,6 @@ export function StudentListManager({
             onKeyPress={handleKeyPress}
             className="flex-1 input-field"
           />
-          <Select value={newStudentLevel} onValueChange={(value: AcademicLevel) => setNewStudentLevel(value)}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium-high">Medium-High</SelectItem>
-              <SelectItem value="medium-low">Medium-Low</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
           <Button 
             onClick={handleAddStudent} 
             size="sm"
@@ -149,41 +113,20 @@ export function StudentListManager({
         {students.map((student, index) => (
           <Card key={student.id} className="student-item p-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 flex-1">
+              <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
                   {index + 1}
                 </div>
-                <div className="flex items-center space-x-2 flex-1">
-                  <span className="text-sm text-gray-900">{student.name}</span>
-                  <div className={`w-6 h-6 ${getAcademicLevelColor(student.academicLevel)} text-white rounded text-xs flex items-center justify-center font-medium`}>
-                    {getAcademicLevelLabel(student.academicLevel)}
-                  </div>
-                </div>
+                <span className="text-sm text-gray-900">{student.name}</span>
               </div>
-              <div className="flex items-center space-x-1">
-                <Select 
-                  value={student.academicLevel || 'medium-high'} 
-                  onValueChange={(value: AcademicLevel) => onUpdateStudent(student.id, { academicLevel: value })}
-                >
-                  <SelectTrigger className="w-20 h-7 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="medium-high">Med-Hi</SelectItem>
-                    <SelectItem value="medium-low">Med-Lo</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onRemoveStudent(student.id)}
-                  className="text-gray-400 hover:text-red-500 h-8 w-8 p-0"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRemoveStudent(student.id)}
+                className="text-gray-400 hover:text-red-500 h-8 w-8 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
           </Card>
         ))}

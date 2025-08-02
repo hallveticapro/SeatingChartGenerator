@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { MapPin, UserX, UserCheck, Ruler, Plus, X } from 'lucide-react';
+import { MapPin, UserX, Ruler, Plus, X } from 'lucide-react';
 
 interface ConstraintsBuilderProps {
   students: Student[];
@@ -28,8 +28,6 @@ export function ConstraintsBuilder({
   const [hardSeatDesk, setHardSeatDesk] = useState('');
   const [keepApartStudent1, setKeepApartStudent1] = useState('');
   const [keepApartStudent2, setKeepApartStudent2] = useState('');
-  const [keepTogetherStudent1, setKeepTogetherStudent1] = useState('');
-  const [keepTogetherStudent2, setKeepTogetherStudent2] = useState('');
   const [distanceStudent1, setDistanceStudent1] = useState('');
   const [distanceStudent2, setDistanceStudent2] = useState('');
   const [minDistance, setMinDistance] = useState(2);
@@ -57,17 +55,6 @@ export function ConstraintsBuilder({
     }
   };
 
-  const handleAddKeepTogether = () => {
-    if (keepTogetherStudent1 && keepTogetherStudent2 && keepTogetherStudent1 !== keepTogetherStudent2) {
-      onAddConstraint({
-        type: 'keep_together',
-        studentIds: [keepTogetherStudent1, keepTogetherStudent2]
-      });
-      setKeepTogetherStudent1('');
-      setKeepTogetherStudent2('');
-    }
-  };
-
   const handleAddDistance = () => {
     if (distanceStudent1 && distanceStudent2 && distanceStudent1 !== distanceStudent2) {
       onAddConstraint({
@@ -92,8 +79,6 @@ export function ConstraintsBuilder({
         return `${getStudentName(constraint.studentIds[0])} → Desk ${getDeskNumber(constraint.deskId)}`;
       case 'keep_apart':
         return `${getStudentName(constraint.studentIds[0])} ↔ ${getStudentName(constraint.studentIds[1])} apart`;
-      case 'keep_together':
-        return `${getStudentName(constraint.studentIds[0])} ↔ ${getStudentName(constraint.studentIds[1])} together`;
       case 'distance':
         return `${getStudentName(constraint.studentIds[0])} ↔ ${getStudentName(constraint.studentIds[1])} min ${constraint.minDistance} desks`;
       default:
@@ -105,7 +90,6 @@ export function ConstraintsBuilder({
     switch (type) {
       case 'hard_seat': return <MapPin className="w-3 h-3 text-blue-600" />;
       case 'keep_apart': return <UserX className="w-3 h-3 text-yellow-600" />;
-      case 'keep_together': return <UserCheck className="w-3 h-3 text-green-600" />;
       case 'distance': return <Ruler className="w-3 h-3 text-slate-600" />;
       default: return null;
     }
@@ -115,7 +99,6 @@ export function ConstraintsBuilder({
     switch (type) {
       case 'hard_seat': return 'bg-blue-50';
       case 'keep_apart': return 'bg-yellow-50';
-      case 'keep_together': return 'bg-green-50';
       case 'distance': return 'bg-slate-50';
       default: return 'bg-gray-50';
     }
@@ -243,64 +226,6 @@ export function ConstraintsBuilder({
                 }}
               >
                 Add Keep Apart Rule
-              </Button>
-            </Card>
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Keep Together */}
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-sm font-medium text-gray-700 p-3 bg-gray-50 rounded-lg hover:bg-gray-100"
-            >
-              <UserCheck className="w-4 h-4 mr-2 text-green-600" />
-              Keep Together
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3">
-            <Card className="p-3 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <Select value={keepTogetherStudent1} onValueChange={setKeepTogetherStudent1}>
-                  <SelectTrigger className="input-field">
-                    <SelectValue placeholder="Student A" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students.map(student => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <Select value={keepTogetherStudent2} onValueChange={setKeepTogetherStudent2}>
-                  <SelectTrigger className="input-field">
-                    <SelectValue placeholder="Student B" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students.filter(s => s.id !== keepTogetherStudent1).map(student => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button 
-                onClick={handleAddKeepTogether} 
-                className="w-full"
-                size="sm"
-                style={{ 
-                  opacity: 1, 
-                  visibility: 'visible', 
-                  backgroundColor: '#16a34a', 
-                  color: 'white', 
-                  border: 'none' 
-                }}
-              >
-                Add Keep Together Rule
               </Button>
             </Card>
           </CollapsibleContent>

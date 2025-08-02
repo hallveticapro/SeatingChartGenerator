@@ -1,9 +1,6 @@
-export type AcademicLevel = 'high' | 'medium-high' | 'medium-low' | 'low';
-
 export interface Student {
   id: string;
   name: string;
-  academicLevel?: AcademicLevel;
 }
 
 export interface Desk {
@@ -30,7 +27,7 @@ export interface DeskGroup {
 
 export interface Constraint {
   id: string;
-  type: 'hard_seat' | 'keep_apart' | 'keep_together' | 'distance' | 'must_be_in_group' | 'cannot_be_in_group';
+  type: 'hard_seat' | 'keep_apart' | 'distance' | 'must_be_in_group' | 'cannot_be_in_group';
   studentIds: string[];
   deskId?: string;
   minDistance?: number;
