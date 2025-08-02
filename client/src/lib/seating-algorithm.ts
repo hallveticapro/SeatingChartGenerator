@@ -74,6 +74,26 @@ function validateConstraints(
         break;
       }
 
+      case 'keep_together': {
+        const [studentId1, studentId2] = constraint.studentIds;
+        const desk1Id = Object.keys(assignments).find(
+          deskId => assignments[deskId] === studentId1
+        );
+        const desk2Id = Object.keys(assignments).find(
+          deskId => assignments[deskId] === studentId2
+        );
+
+        if (desk1Id && desk2Id) {
+          const desk1 = deskMap.get(desk1Id);
+          const desk2 = deskMap.get(desk2Id);
+          
+          if (desk1 && desk2 && !areDesksAdjacent(desk1, desk2)) {
+            violations.push(`Keep together constraint violated: Students are not sitting close enough`);
+          }
+        }
+        break;
+      }
+
       case 'distance': {
         const [studentId1, studentId2] = constraint.studentIds;
         const desk1Id = Object.keys(assignments).find(
