@@ -41,6 +41,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
 # Switch to non-root user
 USER nextjs
 
+# Set production environment
+ENV NODE_ENV=production
+
 # Expose port
 EXPOSE 5000
 

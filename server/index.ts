@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+// Conditional imports to avoid loading vite in production
 
 const app = express();
 app.use(express.json());
@@ -17,7 +17,7 @@ app.use((req, res, next) => {
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 
-  res.on("finish", () => {
+  res.on("finish", async () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
@@ -29,6 +29,11 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + "…";
       }
 
+      // Use dynamic import for log function
+      const { log } =
+        process.env.NODE_ENV === "development"
+          ? await import("./vite")
+          : await import("./static");
       log(logLine);
     }
   });
@@ -57,9 +62,11 @@ app.get("/health", (_req: Request, res: Response) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  if (process.env.NODE_ENV === "development") {
+    const { setupVite } = await import("./vite");
     await setupVite(app, server);
   } else {
+    const { serveStatic } = await import("./static");
     serveStatic(app);
   }
 
@@ -72,7 +79,12 @@ app.get("/health", (_req: Request, res: Response) => {
     {
       port,
     },
-    () => {
+    async () => {
+      // Use dynamic import for log function
+      const { log } =
+        process.env.NODE_ENV === "development"
+          ? await import("./vite")
+          : await import("./static");
       log(`serving on port ${port}`);
     }
   );
