@@ -45,10 +45,10 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
     const canvasRect = canvas.getBoundingClientRect();
     console.log('Canvas dimensions:', canvasRect.width, 'x', canvasRect.height);
 
-    // Create canvas from HTML with high resolution for crisp text
+    // Create canvas from HTML with balanced resolution
     console.log('Starting html2canvas...');
     const htmlCanvas = await window.html2canvas(canvas, {
-      scale: 4, // High scale for very crisp text
+      scale: 2, // Balanced scale for good quality and manageable file size
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -58,31 +58,52 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       scrollX: 0,
       scrollY: 0,
       onclone: (clonedDoc: any) => {
-        // Dramatically enhance text in the clone for PDF quality
+        // Transform the entire canvas for PDF - make everything bigger
+        const clonedCanvas = clonedDoc.getElementById('room-canvas');
+        if (clonedCanvas) {
+          clonedCanvas.style.transform = 'scale(1.8)';
+          clonedCanvas.style.transformOrigin = 'top left';
+          clonedCanvas.style.width = 'auto';
+          clonedCanvas.style.height = 'auto';
+        }
+        
+        // Enhance desk containers and text for PDF quality
         const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
         clonedDesks.forEach((desk: any) => {
-          // Make text much larger and bolder for PDF
+          // Make desk containers bigger to fit larger text
+          desk.style.width = '160px';
+          desk.style.height = '100px';
+          desk.style.padding = '12px';
+          desk.style.display = 'flex';
+          desk.style.flexDirection = 'column';
+          desk.style.alignItems = 'center';
+          desk.style.justifyContent = 'center';
+          desk.style.gap = '6px';
+          desk.style.boxSizing = 'border-box';
+          
           const textElements = desk.querySelectorAll('div, span, p');
           textElements.forEach((textEl: any, index: number) => {
             if (index === 0) {
-              // Desk number - make it very large
-              textEl.style.fontSize = '24px';
-              textEl.style.fontWeight = '900';
+              // Desk number
+              textEl.style.fontSize = '18px';
+              textEl.style.fontWeight = 'bold';
               textEl.style.color = '#000000';
-              textEl.style.lineHeight = '1.2';
-              textEl.style.textShadow = '0 0 1px rgba(0,0,0,0.5)';
+              textEl.style.lineHeight = '1.1';
+              textEl.style.textAlign = 'center';
             } else {
-              // Student name or "Unassigned" - also much larger
-              textEl.style.fontSize = '20px';
-              textEl.style.fontWeight = '700';
-              textEl.style.lineHeight = '1.3';
-              textEl.style.color = '#222222';
-              textEl.style.textShadow = '0 0 1px rgba(0,0,0,0.3)';
+              // Student name or "Unassigned"
+              textEl.style.fontSize = '15px';
+              textEl.style.fontWeight = '600';
+              textEl.style.lineHeight = '1.2';
+              textEl.style.color = '#333333';
+              textEl.style.textAlign = 'center';
+              textEl.style.maxWidth = '140px';
+              textEl.style.wordWrap = 'break-word';
+              textEl.style.overflow = 'hidden';
             }
             textEl.style.fontFamily = 'Arial, sans-serif';
             textEl.style.textRendering = 'optimizeLegibility';
             textEl.style.webkitFontSmoothing = 'antialiased';
-            textEl.style.mozOsxFontSmoothing = 'grayscale';
           });
         });
       }
