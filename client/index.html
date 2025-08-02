@@ -7,7 +7,40 @@
     <meta name="description" content="Create and manage classroom seating charts with drag-and-drop functionality, student constraints, and PDF export capabilities." />
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script>
+      // Inline jsPDF loader to avoid CDN issues
+      window.loadPDFLibraries = async function() {
+        return new Promise((resolve, reject) => {
+          if (window.jsPDF) {
+            resolve(true);
+            return;
+          }
+          
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js';
+          script.async = false;
+          
+          script.onload = function() {
+            console.log('jsPDF script loaded, checking window.jsPDF:', typeof window.jsPDF);
+            setTimeout(() => {
+              console.log('After timeout, window.jsPDF:', typeof window.jsPDF);
+              console.log('window.jsPDF value:', window.jsPDF);
+              if (window.jsPDF) {
+                resolve(true);
+              } else {
+                reject(new Error('jsPDF loaded but not available on window'));
+              }
+            }, 100);
+          };
+          
+          script.onerror = function() {
+            reject(new Error('Failed to load jsPDF script'));
+          };
+          
+          document.head.appendChild(script);
+        });
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>

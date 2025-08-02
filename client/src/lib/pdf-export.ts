@@ -18,19 +18,21 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
       throw new Error('html2canvas library not found. Please refresh the page.');
     }
     
-    // Load jsPDF if not available
-    if (!window.jsPDF && (window as any).loadJsPDF) {
-      console.log('Loading jsPDF dynamically...');
+    // Load PDF libraries if not available
+    if (!window.jsPDF && (window as any).loadPDFLibraries) {
+      console.log('Loading PDF libraries dynamically...');
       try {
-        await (window as any).loadJsPDF();
+        await (window as any).loadPDFLibraries();
+        console.log('PDF libraries loaded successfully');
       } catch (error) {
-        console.error('Failed to load jsPDF dynamically:', error);
+        console.error('Failed to load PDF libraries:', error);
+        throw new Error('Could not load PDF export libraries. Please refresh the page and try again.');
       }
     }
     
     // Final check for jsPDF
     if (!window.jsPDF) {
-      throw new Error('jsPDF library not available. Please refresh the page and try again.');
+      throw new Error('jsPDF library still not available after loading attempt. Please refresh the page.');
     }
 
     const canvas = document.getElementById(canvasElementId);
