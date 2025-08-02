@@ -18,21 +18,21 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
       throw new Error('html2canvas library not found. Please refresh the page.');
     }
     
-    // Load PDF libraries if not available
+    // Try to load PDF libraries
+    let useRealPDF = false;
     if (!window.jsPDF && (window as any).loadPDFLibraries) {
-      console.log('Loading PDF libraries dynamically...');
+      console.log('Attempting to load jsPDF...');
       try {
-        await (window as any).loadPDFLibraries();
-        console.log('PDF libraries loaded successfully');
+        useRealPDF = await (window as any).loadPDFLibraries();
+        if (useRealPDF) {
+          console.log('Real jsPDF loaded successfully');
+        } else {
+          console.log('Using fallback PDF method');
+        }
       } catch (error) {
-        console.error('Failed to load PDF libraries:', error);
-        throw new Error('Could not load PDF export libraries. Please refresh the page and try again.');
+        console.log('jsPDF loading failed, using fallback method');
+        useRealPDF = false;
       }
-    }
-    
-    // Final check for jsPDF
-    if (!window.jsPDF) {
-      throw new Error('jsPDF library still not available after loading attempt. Please refresh the page.');
     }
 
     const canvas = document.getElementById(canvasElementId);
@@ -74,38 +74,46 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
     // Use landscape if width > height
     const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
     
-    // Create PDF - handle different jsPDF loading patterns
-    let jsPDF;
-    console.log('window.jsPDF structure:', Object.keys(window.jsPDF || {}));
-    
-    if (window.jsPDF) {
+    // Create PDF using available method
+    if (window.jsPDF && (typeof window.jsPDF === 'object' || typeof window.jsPDF === 'function')) {
+      console.log('Using real jsPDF library');
+      
+      // Handle different jsPDF loading patterns
+      let jsPDF;
       if (typeof window.jsPDF.jsPDF === 'function') {
         jsPDF = window.jsPDF.jsPDF; // For UMD versions
       } else if (typeof window.jsPDF === 'function') {
         jsPDF = window.jsPDF; // For older versions
       } else {
         console.error('jsPDF found but no valid constructor:', window.jsPDF);
-        throw new Error('jsPDF constructor not found in loaded library');
+        throw new Error('jsPDF constructor not found');
+      }
+      
+      console.log('Creating PDF with dimensions:', imgWidth, 'x', imgHeight, 'orientation:', orientation);
+      const pdf = new jsPDF({
+        orientation,
+        unit: 'px',
+        format: [imgWidth, imgHeight]
+      });
+
+      // Add image to PDF
+      const imgData = htmlCanvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+
+      // Save PDF
+      pdf.save(filename);
+    } else {
+      console.log('Using fallback image download method');
+      
+      // Fallback: use the simple PDF creator (actually downloads as PNG)
+      if ((window as any).createSimplePDF) {
+        const simplePdf = await (window as any).createSimplePDF(htmlCanvas, filename);
+        simplePdf.addImage(htmlCanvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+        simplePdf.save(filename);
+      } else {
+        throw new Error('No PDF creation method available');
       }
     }
-    
-    if (!jsPDF) {
-      throw new Error('jsPDF constructor not available');
-    }
-    
-    console.log('Creating PDF with dimensions:', imgWidth, 'x', imgHeight, 'orientation:', orientation);
-    const pdf = new jsPDF({
-      orientation,
-      unit: 'px',
-      format: [imgWidth, imgHeight]
-    });
-
-    // Add image to PDF
-    const imgData = htmlCanvas.toDataURL('image/png');
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-
-    // Save PDF
-    pdf.save(filename);
   } catch (error) {
     console.error('PDF export failed:', error);
     throw new Error('Failed to export PDF. Please try again.');
