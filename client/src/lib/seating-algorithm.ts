@@ -83,6 +83,7 @@ function validateConstraints(
           deskId => assignments[deskId] === studentId2
         );
 
+        // Only validate if both students are assigned
         if (desk1Id && desk2Id) {
           const desk1 = deskMap.get(desk1Id);
           const desk2 = deskMap.get(desk2Id);
@@ -91,6 +92,7 @@ function validateConstraints(
             violations.push(`Keep together constraint violated: Students are not sitting close enough`);
           }
         }
+        // If only one student is assigned, the constraint is not yet violated
         break;
       }
 
@@ -208,13 +210,19 @@ export function generateSeatingChart(
     studentConnections.get(student2)!.add(student1);
   }
   
-  // Check for impossible keep_together constraint groups (more than 4 students connected)
+  // Check for impossible keep_together constraint groups
   for (const [studentId, connections] of studentConnections) {
-    if (connections.size > 3) {
+    if (connections.size > 1) {
+      // Any student with more than 1 keep_together constraint creates complexity
+      const studentName = students.find(s => s.id === studentId)?.name || 'Unknown';
+      const connectedNames = Array.from(connections).map(id => 
+        students.find(s => s.id === id)?.name || 'Unknown'
+      ).join(', ');
+      
       return {
         success: false,
         assignments: {},
-        errorMessage: `Student "${students.find(s => s.id === studentId)?.name}" has too many "keep together" constraints. Each student can only be kept together with at most 3 other students to form a valid desk cluster.`
+        errorMessage: `"${studentName}" has multiple "keep together" constraints with: ${connectedNames}. This creates impossible seating requirements. Please use only one "keep together" constraint per student.`
       };
     }
   }
