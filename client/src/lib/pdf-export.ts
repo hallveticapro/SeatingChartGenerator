@@ -11,10 +11,19 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
     console.log('Looking for element:', canvasElementId);
     console.log('html2canvas available:', !!window.html2canvas);
     console.log('jsPDF available:', !!window.jsPDF);
+    console.log('jsPDF object:', window.jsPDF);
     
-    if (!window.html2canvas || !window.jsPDF) {
-      console.error('Libraries missing - html2canvas:', !!window.html2canvas, 'jsPDF:', !!window.jsPDF);
-      throw new Error('PDF export libraries not loaded. Please refresh the page and try again.');
+    // Wait a bit for libraries to fully load
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    if (!window.html2canvas) {
+      console.error('html2canvas not loaded');
+      throw new Error('html2canvas library not loaded. Please refresh the page and try again.');
+    }
+    
+    if (!window.jsPDF) {
+      console.error('jsPDF not loaded');
+      throw new Error('jsPDF library not loaded. Please refresh the page and try again.');
     }
 
     const canvas = document.getElementById(canvasElementId);
@@ -58,16 +67,21 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
     
     // Create PDF - handle different jsPDF loading patterns
     let jsPDF;
+    console.log('window.jsPDF structure:', Object.keys(window.jsPDF || {}));
+    
     if (window.jsPDF) {
-      if (window.jsPDF.jsPDF) {
-        jsPDF = window.jsPDF.jsPDF; // For newer versions
-      } else {
+      if (typeof window.jsPDF.jsPDF === 'function') {
+        jsPDF = window.jsPDF.jsPDF; // For UMD versions
+      } else if (typeof window.jsPDF === 'function') {
         jsPDF = window.jsPDF; // For older versions
+      } else {
+        console.error('jsPDF found but no valid constructor:', window.jsPDF);
+        throw new Error('jsPDF constructor not found in loaded library');
       }
     }
     
     if (!jsPDF) {
-      throw new Error('jsPDF constructor not found');
+      throw new Error('jsPDF constructor not available');
     }
     
     console.log('Creating PDF with dimensions:', imgWidth, 'x', imgHeight, 'orientation:', orientation);
