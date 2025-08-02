@@ -18,6 +18,10 @@ Preferred communication style: Simple, everyday language.
 - Eliminated visible font size flashing during export for professional user experience
 - Implemented robust jsPDF library loading with multiple CDN fallbacks
 - Enhanced desk text rendering in PDFs with proper sizing and spacing without affecting UI
+- Fixed text clipping issue in PDF exports by removing overflow:hidden and setting proper text container layouts
+- Added Docker containerization with multi-stage build for production deployment
+- Implemented GitHub Actions workflow for automated Docker image builds and GHCR publishing
+- Added health check endpoint for container monitoring and deployment verification
 
 ### January 26, 2025
 - Fixed desk dragging functionality - desks now properly drag and snap to grid without jumping

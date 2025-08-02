@@ -1,0 +1,73 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist
+.next
+out
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git files
+.git
+.gitignore
+
+# Documentation
+README.md
+docs
+
+# Test files
+coverage
+*.test.js
+*.spec.js
+
+# Temporary files
+*.tmp
+*.temp
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Replit specific
+.replit
+replit.nix
+
+# Development files
+.eslintrc*
+.prettierrc*
+tsconfig.json
+tailwind.config.*
+vite.config.*
+postcss.config.*
+
+# Attached assets (user uploads)
+attached_assets
+
+# GitHub files (except workflows)
+.github
+!.github/workflows

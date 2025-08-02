@@ -36,6 +36,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint for Docker
+app.get("/health", (_req: Request, res: Response) => {
+  res
+    .status(200)
+    .json({ status: "healthy", timestamp: new Date().toISOString() });
+});
+
 (async () => {
   const server = await registerRoutes(app);
 
@@ -60,7 +67,7 @@ app.use((req, res, next) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || "8754", 10);
+  const port = parseInt(process.env.PORT || "3000", 10);
   server.listen(
     {
       port,
