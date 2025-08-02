@@ -237,7 +237,7 @@ export function generateSeatingChart(
   }
   
   // Check for impossible keep_together constraint groups (more than 2 connections)
-  for (const [studentId, connections] of studentConnections) {
+  for (const [studentId, connections] of Array.from(studentConnections.entries())) {
     if (connections.size > 2) {
       const studentName = students.find(s => s.id === studentId)?.name || 'Unknown';
       const connectedNames = Array.from(connections).map(id => 
