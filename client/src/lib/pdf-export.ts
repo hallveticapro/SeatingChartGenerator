@@ -45,10 +45,10 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
     const canvasRect = canvas.getBoundingClientRect();
     console.log('Canvas dimensions:', canvasRect.width, 'x', canvasRect.height);
 
-    // Create canvas from HTML - go back to what was working
+    // Create canvas with higher resolution and simple text enhancement
     console.log('Starting html2canvas...');
     const htmlCanvas = await window.html2canvas(canvas, {
-      scale: 2,
+      scale: 3, // Higher resolution for better text
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -56,31 +56,7 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       width: canvasRect.width,
       height: canvasRect.height,
       scrollX: 0,
-      scrollY: 0,
-      onclone: (clonedDoc: any) => {
-        // Simple text enhancement without changing layout
-        const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
-        clonedDesks.forEach((desk: any) => {
-          // Keep original desk size, just enhance text
-          const textElements = desk.querySelectorAll('div, span, p');
-          textElements.forEach((textEl: any, index: number) => {
-            if (index === 0) {
-              // Desk number - larger and bolder
-              textEl.style.fontSize = '16px';
-              textEl.style.fontWeight = 'bold';
-              textEl.style.color = '#000000';
-            } else {
-              // Student name - also larger
-              textEl.style.fontSize = '14px';
-              textEl.style.fontWeight = '600';
-              textEl.style.color = '#333333';
-            }
-            textEl.style.fontFamily = 'Arial, sans-serif';
-            textEl.style.textRendering = 'optimizeLegibility';
-            textEl.style.webkitFontSmoothing = 'antialiased';
-          });
-        });
-      }
+      scrollY: 0
     });
     
     console.log('html2canvas completed. Canvas size:', htmlCanvas.width, 'x', htmlCanvas.height);
