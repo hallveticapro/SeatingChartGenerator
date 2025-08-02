@@ -45,10 +45,36 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
     const canvasRect = canvas.getBoundingClientRect();
     console.log('Canvas dimensions:', canvasRect.width, 'x', canvasRect.height);
 
+    // Temporarily increase font sizes for PDF export
+    const deskElements = canvas.querySelectorAll('[data-desk-id]');
+    const originalStyles: { element: Element; fontSize: string; fontWeight: string }[] = [];
+    
+    // Store original styles and increase font sizes
+    deskElements.forEach(element => {
+      const computed = window.getComputedStyle(element);
+      originalStyles.push({
+        element,
+        fontSize: computed.fontSize,
+        fontWeight: computed.fontWeight
+      });
+      
+      // Increase font size and weight for PDF export
+      (element as HTMLElement).style.fontSize = '18px';
+      (element as HTMLElement).style.fontWeight = 'bold';
+      
+      // Also update child text elements
+      const textElements = element.querySelectorAll('div, span, p');
+      textElements.forEach(textEl => {
+        (textEl as HTMLElement).style.fontSize = '18px';
+        (textEl as HTMLElement).style.fontWeight = 'bold';
+        (textEl as HTMLElement).style.lineHeight = '1.3';
+      });
+    });
+
     // Create canvas from HTML with higher scale for better quality
     console.log('Starting html2canvas...');
     const htmlCanvas = await window.html2canvas(canvas, {
-      scale: 2, // Higher scale for better text rendering
+      scale: 4, // Very high scale for crisp text
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -56,7 +82,38 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       width: canvasRect.width,
       height: canvasRect.height,
       scrollX: 0,
-      scrollY: 0
+      scrollY: 0,
+      onclone: (clonedDoc: any) => {
+        // Ensure text is rendered with high quality in the cloned document
+        const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
+        clonedDesks.forEach((desk: any) => {
+          (desk as HTMLElement).style.fontSize = '18px';
+          (desk as HTMLElement).style.fontWeight = 'bold';
+          
+          const textElements = desk.querySelectorAll('div, span, p');
+          textElements.forEach((textEl: any) => {
+            (textEl as HTMLElement).style.fontSize = '18px';
+            (textEl as HTMLElement).style.fontWeight = 'bold';
+            (textEl as HTMLElement).style.lineHeight = '1.3';
+            (textEl as HTMLElement).style.textRendering = 'optimizeLegibility';
+            // Use type assertion to avoid TS error
+            (textEl as any).style.webkitFontSmoothing = 'antialiased';
+          });
+        });
+      }
+    });
+    
+    // Restore original styles
+    originalStyles.forEach(({ element, fontSize, fontWeight }) => {
+      (element as HTMLElement).style.fontSize = fontSize;
+      (element as HTMLElement).style.fontWeight = fontWeight;
+      
+      const textElements = element.querySelectorAll('div, span, p');
+      textElements.forEach(textEl => {
+        (textEl as HTMLElement).style.fontSize = '';
+        (textEl as HTMLElement).style.fontWeight = '';
+        (textEl as HTMLElement).style.lineHeight = '';
+      });
     });
     
     console.log('html2canvas completed. Canvas size:', htmlCanvas.width, 'x', htmlCanvas.height);
