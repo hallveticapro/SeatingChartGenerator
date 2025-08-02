@@ -45,10 +45,10 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
     const canvasRect = canvas.getBoundingClientRect();
     console.log('Canvas dimensions:', canvasRect.width, 'x', canvasRect.height);
 
-    // Create canvas with higher resolution and simple text enhancement
+    // Create canvas with desk size enhancement for PDF
     console.log('Starting html2canvas...');
     const htmlCanvas = await window.html2canvas(canvas, {
-      scale: 3, // Higher resolution for better text
+      scale: 2,
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -56,7 +56,26 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       width: canvasRect.width,
       height: canvasRect.height,
       scrollX: 0,
-      scrollY: 0
+      scrollY: 0,
+      onclone: (clonedDoc: any) => {
+        // Make desk containers slightly bigger but keep font sizes the same
+        const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
+        clonedDesks.forEach((desk: any) => {
+          // Increase desk size by 20% for more text space
+          const currentWidth = desk.style.width || '120px';
+          const currentHeight = desk.style.height || '64px';
+          
+          const widthValue = parseInt(currentWidth);
+          const heightValue = parseInt(currentHeight);
+          
+          desk.style.width = `${Math.round(widthValue * 1.2)}px`;
+          desk.style.height = `${Math.round(heightValue * 1.2)}px`;
+          
+          // Ensure text stays centered with more padding
+          desk.style.padding = '10px';
+          desk.style.boxSizing = 'border-box';
+        });
+      }
     });
     
     console.log('html2canvas completed. Canvas size:', htmlCanvas.width, 'x', htmlCanvas.height);
