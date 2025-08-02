@@ -233,7 +233,20 @@ export default function Home() {
   };
 
   const handleRemoveConstraint = (constraintId: string) => {
+    // Find the constraint being removed
+    const constraintToRemove = constraints.find(c => c.id === constraintId);
+    
+    // Remove the constraint
     setConstraints(prev => prev.filter(c => c.id !== constraintId));
+    
+    // If it's a locked empty constraint, unlock the desk
+    if (constraintToRemove?.type === 'hard_seat' && constraintToRemove.studentId === 'locked_empty') {
+      setDesks(prev => prev.map(desk => 
+        desk.id === constraintToRemove.deskId 
+          ? { ...desk, isLockedEmpty: false, assignedStudent: undefined }
+          : desk
+      ));
+    }
   };
 
   const handleGenerateSeatingChart = async () => {
