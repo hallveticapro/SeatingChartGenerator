@@ -59,15 +59,15 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       });
       
       // Increase font size and weight for PDF export
-      (element as HTMLElement).style.fontSize = '18px';
+      (element as HTMLElement).style.fontSize = '14px';
       (element as HTMLElement).style.fontWeight = 'bold';
       
-      // Also update child text elements
+      // Also update child text elements - make them even larger
       const textElements = element.querySelectorAll('div, span, p');
       textElements.forEach(textEl => {
-        (textEl as HTMLElement).style.fontSize = '18px';
+        (textEl as HTMLElement).style.fontSize = '14px';
         (textEl as HTMLElement).style.fontWeight = 'bold';
-        (textEl as HTMLElement).style.lineHeight = '1.3';
+        (textEl as HTMLElement).style.lineHeight = '1.2';
       });
     });
 
@@ -87,14 +87,14 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
         // Ensure text is rendered with high quality in the cloned document
         const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
         clonedDesks.forEach((desk: any) => {
-          (desk as HTMLElement).style.fontSize = '18px';
+          (desk as HTMLElement).style.fontSize = '14px';
           (desk as HTMLElement).style.fontWeight = 'bold';
           
           const textElements = desk.querySelectorAll('div, span, p');
           textElements.forEach((textEl: any) => {
-            (textEl as HTMLElement).style.fontSize = '18px';
+            (textEl as HTMLElement).style.fontSize = '14px';
             (textEl as HTMLElement).style.fontWeight = 'bold';
-            (textEl as HTMLElement).style.lineHeight = '1.3';
+            (textEl as HTMLElement).style.lineHeight = '1.2';
             (textEl as HTMLElement).style.textRendering = 'optimizeLegibility';
             // Use type assertion to avoid TS error
             (textEl as any).style.webkitFontSmoothing = 'antialiased';
@@ -136,18 +136,18 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       // Calculate PDF dimensions - use A4 landscape as base
       const pdfWidth = 297; // A4 width in mm (landscape)
       const pdfHeight = 210; // A4 height in mm (landscape)
-      const margin = 20; // margin in mm
-      const headerHeight = 15; // header height in mm
-      const footerHeight = 10; // footer height in mm
+      const margin = 15; // Smaller margin for more space
+      const headerHeight = 20; // Larger header height
+      const footerHeight = 15; // Larger footer height
       
       // Available space for the canvas
       const availableWidth = pdfWidth - (2 * margin);
       const availableHeight = pdfHeight - (2 * margin) - headerHeight - footerHeight;
       
-      // Calculate scale to fit canvas within available space
+      // Calculate scale to fit canvas within available space, but don't make it too small
       const scaleX = availableWidth / (htmlCanvas.width * 0.264583); // Convert px to mm (96 DPI)
       const scaleY = availableHeight / (htmlCanvas.height * 0.264583);
-      const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+      const scale = Math.min(scaleX, scaleY, 1.5); // Allow scaling up to 1.5x for better size
       
       const imgWidth = (htmlCanvas.width * 0.264583) * scale;
       const imgHeight = (htmlCanvas.height * 0.264583) * scale;
@@ -166,23 +166,23 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       });
 
       // Add header
-      pdf.setFontSize(16);
+      pdf.setFontSize(24);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Classroom Seating Chart', pdfWidth / 2, margin + 10, { align: 'center' });
+      pdf.text('Classroom Seating Chart', pdfWidth / 2, margin + 15, { align: 'center' });
       
       // Add date/time
-      pdf.setFontSize(10);
+      pdf.setFontSize(14);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(`Generated: ${dateString}`, pdfWidth - margin, margin + 5, { align: 'right' });
+      pdf.text(`Generated: ${dateString}`, pdfWidth - margin, margin + 8, { align: 'right' });
 
       // Add the seating chart image
       const imgData = htmlCanvas.toDataURL('image/png', 1.0);
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth, imgHeight);
 
       // Add footer
-      pdf.setFontSize(8);
+      pdf.setFontSize(12);
       pdf.setFont('helvetica', 'italic');
-      pdf.text('Generated using Classroom Seating Chart Builder', pdfWidth / 2, pdfHeight - 5, { align: 'center' });
+      pdf.text('Generated using Classroom Seating Chart Builder', pdfWidth / 2, pdfHeight - 8, { align: 'center' });
 
       // Save PDF
       pdf.save(filename);
@@ -207,22 +207,22 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       
       // Add header
       ctx.fillStyle = '#000000';
-      ctx.font = 'bold 24px Arial';
+      ctx.font = 'bold 32px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Classroom Seating Chart', compositeCanvas.width / 2, 40);
+      ctx.fillText('Classroom Seating Chart', compositeCanvas.width / 2, 50);
       
       // Add date
-      ctx.font = '14px Arial';
+      ctx.font = '18px Arial';
       ctx.textAlign = 'right';
-      ctx.fillText(`Generated: ${dateString}`, compositeCanvas.width - 20, 25);
+      ctx.fillText(`Generated: ${dateString}`, compositeCanvas.width - 20, 30);
       
       // Add the main canvas
       ctx.drawImage(htmlCanvas, padding, padding);
       
       // Add footer
-      ctx.font = 'italic 12px Arial';
+      ctx.font = 'italic 16px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Generated using Classroom Seating Chart Builder', compositeCanvas.width / 2, compositeCanvas.height - 20);
+      ctx.fillText('Generated using Classroom Seating Chart Builder', compositeCanvas.width / 2, compositeCanvas.height - 25);
       
       // Download as PNG
       const link = document.createElement('a');
