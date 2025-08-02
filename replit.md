@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### August 2, 2025
+- Completely redesigned PDF export system with professional layout and timestamped filenames
+- Fixed PDF text rendering issues by optimizing canvas cloning and text styling in invisible clone
+- Reduced PDF file size from 65MB to manageable size using JPEG compression and scale optimization
+- Moved timestamp from header to footer with format "Generated using... - Generated on [date/time]"
+- Eliminated visible font size flashing during export for professional user experience
+- Implemented robust jsPDF library loading with multiple CDN fallbacks
+- Enhanced desk text rendering in PDFs with proper sizing and spacing without affecting UI
+
 ### January 26, 2025
 - Fixed desk dragging functionality - desks now properly drag and snap to grid without jumping
 - Resolved button visibility issues - all buttons now display correctly without hover requirement

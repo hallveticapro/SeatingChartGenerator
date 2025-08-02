@@ -45,36 +45,10 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
     const canvasRect = canvas.getBoundingClientRect();
     console.log('Canvas dimensions:', canvasRect.width, 'x', canvasRect.height);
 
-    // Temporarily increase font sizes for PDF export
-    const deskElements = canvas.querySelectorAll('[data-desk-id]');
-    const originalStyles: { element: Element; fontSize: string; fontWeight: string }[] = [];
-    
-    // Store original styles and increase font sizes
-    deskElements.forEach(element => {
-      const computed = window.getComputedStyle(element);
-      originalStyles.push({
-        element,
-        fontSize: computed.fontSize,
-        fontWeight: computed.fontWeight
-      });
-      
-      // Increase font size and weight for PDF export
-      (element as HTMLElement).style.fontSize = '14px';
-      (element as HTMLElement).style.fontWeight = 'bold';
-      
-      // Also update child text elements - make them even larger
-      const textElements = element.querySelectorAll('div, span, p');
-      textElements.forEach(textEl => {
-        (textEl as HTMLElement).style.fontSize = '14px';
-        (textEl as HTMLElement).style.fontWeight = 'bold';
-        (textEl as HTMLElement).style.lineHeight = '1.2';
-      });
-    });
-
-    // Create canvas from HTML with higher scale for better quality
+    // Create canvas from HTML with optimized settings for PDF
     console.log('Starting html2canvas...');
     const htmlCanvas = await window.html2canvas(canvas, {
-      scale: 4, // Very high scale for crisp text
+      scale: 2, // Reduced scale to control file size
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -84,36 +58,36 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       scrollX: 0,
       scrollY: 0,
       onclone: (clonedDoc: any) => {
-        // Ensure text is rendered with high quality in the cloned document
+        // Enhance text rendering only in the clone (invisible to user)
         const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
         clonedDesks.forEach((desk: any) => {
-          (desk as HTMLElement).style.fontSize = '14px';
-          (desk as HTMLElement).style.fontWeight = 'bold';
+          // Make desk containers larger for better text space
+          desk.style.minWidth = '140px';
+          desk.style.minHeight = '80px';
+          desk.style.fontSize = '16px';
+          desk.style.fontWeight = 'bold';
           
           const textElements = desk.querySelectorAll('div, span, p');
-          textElements.forEach((textEl: any) => {
-            (textEl as HTMLElement).style.fontSize = '14px';
-            (textEl as HTMLElement).style.fontWeight = 'bold';
-            (textEl as HTMLElement).style.lineHeight = '1.2';
-            (textEl as HTMLElement).style.textRendering = 'optimizeLegibility';
-            // Use type assertion to avoid TS error
-            (textEl as any).style.webkitFontSmoothing = 'antialiased';
+          textElements.forEach((textEl: any, index: number) => {
+            if (index === 0) {
+              // Desk number
+              textEl.style.fontSize = '14px';
+              textEl.style.fontWeight = 'bold';
+              textEl.style.marginBottom = '4px';
+            } else {
+              // Student name or "Unassigned"
+              textEl.style.fontSize = '13px';
+              textEl.style.fontWeight = '600';
+              textEl.style.lineHeight = '1.3';
+              textEl.style.wordWrap = 'break-word';
+              textEl.style.overflow = 'visible';
+              textEl.style.whiteSpace = 'normal';
+            }
+            textEl.style.textRendering = 'optimizeLegibility';
+            textEl.style.webkitFontSmoothing = 'antialiased';
           });
         });
       }
-    });
-    
-    // Restore original styles
-    originalStyles.forEach(({ element, fontSize, fontWeight }) => {
-      (element as HTMLElement).style.fontSize = fontSize;
-      (element as HTMLElement).style.fontWeight = fontWeight;
-      
-      const textElements = element.querySelectorAll('div, span, p');
-      textElements.forEach(textEl => {
-        (textEl as HTMLElement).style.fontSize = '';
-        (textEl as HTMLElement).style.fontWeight = '';
-        (textEl as HTMLElement).style.lineHeight = '';
-      });
     });
     
     console.log('html2canvas completed. Canvas size:', htmlCanvas.width, 'x', htmlCanvas.height);
@@ -177,20 +151,15 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       pdf.setFontSize(24);
       pdf.setFont('helvetica', 'bold');
       pdf.text('Classroom Seating Chart', pdfWidth / 2, margin + 15, { align: 'center' });
-      
-      // Add date/time
-      pdf.setFontSize(14);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(`Generated: ${dateString}`, pdfWidth - margin, margin + 8, { align: 'right' });
 
-      // Add the seating chart image
-      const imgData = htmlCanvas.toDataURL('image/png', 1.0);
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth, imgHeight);
+      // Add the seating chart image with compression
+      const imgData = htmlCanvas.toDataURL('image/jpeg', 0.85); // Use JPEG with 85% quality for smaller file size
+      pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight);
 
-      // Add footer
+      // Add footer with timestamp
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'italic');
-      pdf.text('Generated using Classroom Seating Chart Builder', pdfWidth / 2, pdfHeight - 8, { align: 'center' });
+      pdf.text(`Generated using Classroom Seating Chart Builder - Generated on ${dateString}`, pdfWidth / 2, pdfHeight - 8, { align: 'center' });
 
         // Save PDF
         pdf.save(filename);
@@ -225,10 +194,7 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       ctx.textAlign = 'center';
       ctx.fillText('Classroom Seating Chart', compositeCanvas.width / 2, 100);
       
-      // Add date
-      ctx.font = '36px Arial'; // Larger date
-      ctx.textAlign = 'right';
-      ctx.fillText(`Generated: ${dateString}`, compositeCanvas.width - 40, 60);
+      // Skip date in header for PNG fallback - will be in footer
       
       // Scale and center the main canvas
       const centerX = (compositeCanvas.width - scaledWidth) / 2;
@@ -236,10 +202,10 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       
       ctx.drawImage(htmlCanvas, centerX, centerY, scaledWidth, scaledHeight);
       
-      // Add footer
+      // Add footer with timestamp
       ctx.font = 'italic 32px Arial'; // Larger footer
       ctx.textAlign = 'center';
-      ctx.fillText('Generated using Classroom Seating Chart Builder', compositeCanvas.width / 2, compositeCanvas.height - 50);
+      ctx.fillText(`Generated using Classroom Seating Chart Builder - Generated on ${dateString}`, compositeCanvas.width / 2, compositeCanvas.height - 50);
       
       // Download as PNG
       const link = document.createElement('a');
