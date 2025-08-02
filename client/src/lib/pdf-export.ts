@@ -12,50 +12,67 @@ export async function exportToPDF(canvasElementId: string, filename: string = 's
       throw new Error(`Canvas element with ID '${canvasElementId}' not found. Please make sure the seating chart is visible.`);
     }
 
-    // Check canvas dimensions and warn if too large
+    // Get canvas dimensions
     const canvasRect = canvas.getBoundingClientRect();
-    const maxWidth = 2480; // A4 landscape width at 300 DPI
-    const maxHeight = 1748; // A4 landscape height at 300 DPI
+    console.log('Canvas dimensions:', canvasRect.width, 'x', canvasRect.height);
 
-    if (canvasRect.width > maxWidth || canvasRect.height > maxHeight) {
-      const shouldContinue = confirm(
-        'Canvas is larger than A4 size. Consider using landscape orientation or reducing canvas size. Continue anyway?'
-      );
-      if (!shouldContinue) return;
-    }
-
-    // Create canvas from HTML
+    // Create canvas from HTML with better quality settings
     console.log('Starting html2canvas...');
     const htmlCanvas = await html2canvas(canvas, {
-      scale: 1,
+      scale: 2, // Higher resolution for better quality
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
       logging: false,
       width: canvasRect.width,
-      height: canvasRect.height
+      height: canvasRect.height,
+      removeContainer: true,
+      imageTimeout: 0,
+      foreignObjectRendering: false // Better text rendering
     });
     
     console.log('html2canvas completed. Canvas size:', htmlCanvas.width, 'x', htmlCanvas.height);
 
-    // Calculate dimensions for PDF
+    // Calculate dimensions for PDF with proper scaling
     const imgWidth = htmlCanvas.width;
     const imgHeight = htmlCanvas.height;
     
-    // Use landscape if width > height
-    const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
+    // Standard page sizes in points (1 point = 1/72 inch)
+    const a4Width = 595.28; // A4 width in points
+    const a4Height = 841.89; // A4 height in points
     
-    // Create PDF
-    console.log('Creating PDF with dimensions:', imgWidth, 'x', imgHeight, 'orientation:', orientation);
+    // Calculate scale to fit content on A4
+    const scaleX = a4Width / imgWidth;
+    const scaleY = a4Height / imgHeight;
+    const scale = Math.min(scaleX, scaleY, 1); // Don't upscale, only downscale
+    
+    const scaledWidth = imgWidth * scale;
+    const scaledHeight = imgHeight * scale;
+    
+    // Use landscape if content is wider than it is tall
+    const orientation = scaledWidth > scaledHeight ? 'landscape' : 'portrait';
+    const pageWidth = orientation === 'landscape' ? a4Height : a4Width;
+    const pageHeight = orientation === 'landscape' ? a4Width : a4Height;
+    
+    // Center the content on the page
+    const offsetX = (pageWidth - scaledWidth) / 2;
+    const offsetY = (pageHeight - scaledHeight) / 2;
+    
+    console.log('Creating PDF with scale:', scale, 'orientation:', orientation);
     const pdf = new jsPDF({
       orientation,
-      unit: 'px',
-      format: [imgWidth, imgHeight]
+      unit: 'pt',
+      format: 'a4'
     });
 
-    // Add image to PDF
-    const imgData = htmlCanvas.toDataURL('image/png');
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    // Add image to PDF with proper scaling and centering
+    const imgData = htmlCanvas.toDataURL('image/png', 0.95); // Slight compression for smaller file
+    pdf.addImage(imgData, 'PNG', offsetX, offsetY, scaledWidth, scaledHeight);
+    
+    // Add title
+    pdf.setFontSize(16);
+    pdf.setTextColor(60, 60, 60);
+    pdf.text('Classroom Seating Chart', 40, 30);
 
     // Save PDF
     pdf.save(filename);
