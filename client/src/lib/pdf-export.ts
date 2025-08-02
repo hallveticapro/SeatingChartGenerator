@@ -45,10 +45,10 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
     const canvasRect = canvas.getBoundingClientRect();
     console.log('Canvas dimensions:', canvasRect.width, 'x', canvasRect.height);
 
-    // Create canvas from HTML with balanced resolution
+    // Create canvas from HTML - go back to what was working
     console.log('Starting html2canvas...');
     const htmlCanvas = await window.html2canvas(canvas, {
-      scale: 2, // Balanced scale for good quality and manageable file size
+      scale: 2,
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -58,48 +58,22 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       scrollX: 0,
       scrollY: 0,
       onclone: (clonedDoc: any) => {
-        // Transform the entire canvas for PDF - make everything bigger
-        const clonedCanvas = clonedDoc.getElementById('room-canvas');
-        if (clonedCanvas) {
-          clonedCanvas.style.transform = 'scale(1.8)';
-          clonedCanvas.style.transformOrigin = 'top left';
-          clonedCanvas.style.width = 'auto';
-          clonedCanvas.style.height = 'auto';
-        }
-        
-        // Enhance desk containers and text for PDF quality
+        // Simple text enhancement without changing layout
         const clonedDesks = clonedDoc.querySelectorAll('[data-desk-id]');
         clonedDesks.forEach((desk: any) => {
-          // Make desk containers bigger to fit larger text
-          desk.style.width = '160px';
-          desk.style.height = '100px';
-          desk.style.padding = '12px';
-          desk.style.display = 'flex';
-          desk.style.flexDirection = 'column';
-          desk.style.alignItems = 'center';
-          desk.style.justifyContent = 'center';
-          desk.style.gap = '6px';
-          desk.style.boxSizing = 'border-box';
-          
+          // Keep original desk size, just enhance text
           const textElements = desk.querySelectorAll('div, span, p');
           textElements.forEach((textEl: any, index: number) => {
             if (index === 0) {
-              // Desk number
-              textEl.style.fontSize = '18px';
+              // Desk number - larger and bolder
+              textEl.style.fontSize = '16px';
               textEl.style.fontWeight = 'bold';
               textEl.style.color = '#000000';
-              textEl.style.lineHeight = '1.1';
-              textEl.style.textAlign = 'center';
             } else {
-              // Student name or "Unassigned"
-              textEl.style.fontSize = '15px';
+              // Student name - also larger
+              textEl.style.fontSize = '14px';
               textEl.style.fontWeight = '600';
-              textEl.style.lineHeight = '1.2';
               textEl.style.color = '#333333';
-              textEl.style.textAlign = 'center';
-              textEl.style.maxWidth = '140px';
-              textEl.style.wordWrap = 'break-word';
-              textEl.style.overflow = 'hidden';
             }
             textEl.style.fontFamily = 'Arial, sans-serif';
             textEl.style.textRendering = 'optimizeLegibility';
@@ -171,8 +145,8 @@ export async function exportToPDF(canvasElementId: string): Promise<void> {
       pdf.setFont('helvetica', 'bold');
       pdf.text('Classroom Seating Chart', pdfWidth / 2, margin + 15, { align: 'center' });
 
-      // Add the seating chart image with moderate compression
-      const imgData = htmlCanvas.toDataURL('image/jpeg', 0.92); // Higher quality for text clarity
+      // Add the seating chart image
+      const imgData = htmlCanvas.toDataURL('image/jpeg', 0.85);
       pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight);
 
       // Add footer with timestamp
