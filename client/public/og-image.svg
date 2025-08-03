@@ -1,0 +1,68 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Main title -->
+  <text x="600" y="180" font-family="Arial, sans-serif" font-size="64" font-weight="bold" text-anchor="middle" fill="white">
+    Classroom Seating Chart Builder
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="240" font-family="Arial, sans-serif" font-size="28" text-anchor="middle" fill="white" opacity="0.9">
+    Create dynamic seating charts with drag-and-drop functionality
+  </text>
+  
+  <!-- Feature list -->
+  <text x="600" y="300" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="white" opacity="0.8">
+    ✓ Student Management  ✓ PDF Export  ✓ Constraint Rules  ✓ Mobile Friendly
+  </text>
+  
+  <!-- Classroom desks illustration -->
+  <g transform="translate(300, 380)">
+    <!-- Row 1 -->
+    <rect x="0" y="0" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="120" y="0" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="240" y="0" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="360" y="0" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="480" y="0" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="600" y="0" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    
+    <!-- Row 2 -->
+    <rect x="0" y="80" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="120" y="80" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="240" y="80" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="360" y="80" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="480" y="80" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="600" y="80" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    
+    <!-- Row 3 -->
+    <rect x="0" y="160" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="120" y="160" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="240" y="160" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="360" y="160" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="480" y="160" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    <rect x="600" y="160" width="80" height="50" rx="5" fill="white" opacity="0.9"/>
+    
+    <!-- Student names on some desks -->
+    <text x="40" y="30" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1E40AF">Alex</text>
+    <text x="160" y="30" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1E40AF">Sarah</text>
+    <text x="280" y="30" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1E40AF">Mike</text>
+    <text x="520" y="30" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1E40AF">Emma</text>
+    
+    <text x="40" y="110" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1E40AF">David</text>
+    <text x="280" y="110" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1E40AF">Lisa</text>
+    <text x="400" y="110" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1E40AF">John</text>
+    <text x="640" y="110" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1E40AF">Kate</text>
+  </g>
+  
+  <!-- Footer -->
+  <text x="600" y="590" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="white" opacity="0.7">
+    Free Web-Based Tool for Educators
+  </text>
+</svg>
