@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    
+
     <!-- Primary Meta Tags -->
     <title>Classroom Seating Chart Builder | Interactive Desk Layout Tool for Teachers</title>
     <meta name="title" content="Classroom Seating Chart Builder | Interactive Desk Layout Tool for Teachers" />
@@ -11,24 +11,24 @@
     <meta name="keywords" content="classroom seating chart, teacher tools, desk layout, student assignment, classroom management, education software, seating planner" />
     <meta name="author" content="Classroom Seating Chart Builder" />
     <meta name="robots" content="index, follow" />
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://classroom-seating-chart.com/" />
+    <meta property="og:url" content="https://seat.ahall.dev/" />
     <meta property="og:title" content="Classroom Seating Chart Builder | Interactive Desk Layout Tool for Teachers" />
     <meta property="og:description" content="Create dynamic classroom seating charts with drag-and-drop desk placement, student management, seating constraints, and professional PDF export. Free web-based tool for educators." />
-    <meta property="og:image" content="https://classroom-seating-chart.com/og-image.png" />
+    <meta property="og:image" content="https://seat.ahall.dev/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="Classroom Seating Chart Builder" />
-    
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://classroom-seating-chart.com/" />
+    <meta property="twitter:url" content="https://seat.ahall.dev/" />
     <meta property="twitter:title" content="Classroom Seating Chart Builder | Interactive Desk Layout Tool for Teachers" />
     <meta property="twitter:description" content="Create dynamic classroom seating charts with drag-and-drop desk placement, student management, seating constraints, and professional PDF export. Free web-based tool for educators." />
-    <meta property="twitter:image" content="https://classroom-seating-chart.com/og-image.png" />
-    
+    <meta property="twitter:image" content="https://seat.ahall.dev/og-image.png" />
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -36,13 +36,13 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#3B82F6" />
-    
+
     <!-- Additional SEO -->
-    <link rel="canonical" href="https://classroom-seating-chart.com/" />
+    <link rel="canonical" href="https://seat.ahall.dev/" />
     <meta name="application-name" content="Classroom Seating Chart Builder" />
     <meta name="msapplication-TileColor" content="#3B82F6" />
     <meta name="msapplication-config" content="/browserconfig.xml" />
-    
+
     <!-- Structured Data -->
     <script type="application/ld+json">
     {
@@ -50,7 +50,7 @@
       "@type": "WebApplication",
       "name": "Classroom Seating Chart Builder",
       "description": "Create dynamic classroom seating charts with drag-and-drop desk placement, student management, seating constraints, and professional PDF export. Free web-based tool for educators.",
-      "url": "https://classroom-seating-chart.com/",
+      "url": "https://seat.ahall.dev/",
       "applicationCategory": "Education",
       "operatingSystem": "Web Browser",
       "offers": {
@@ -86,7 +86,7 @@
           try {
             // Convert canvas to image
             const imgData = canvas.toDataURL('image/jpeg', 0.9);
-            
+
             // Create a simple PDF using data URI
             const pdf = {
               width: canvas.width,
@@ -97,7 +97,7 @@
               save: function(name) {
                 // Create a simple PDF-like structure
                 const link = document.createElement('a');
-                
+
                 // For now, download as high-quality image
                 link.href = this.imageData;
                 link.download = name.replace('.pdf', '.png');
@@ -106,14 +106,14 @@
                 document.body.removeChild(link);
               }
             };
-            
+
             resolve(pdf);
           } catch (error) {
             reject(error);
           }
         });
       };
-      
+
       // Also try to load real jsPDF as backup
       window.loadPDFLibraries = async function() {
         return new Promise((resolve) => {
@@ -121,27 +121,27 @@
             resolve(true);
             return;
           }
-          
+
           // Try multiple CDN sources with working versions
           const sources = [
             'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
             'https://unpkg.com/jspdf@2.4.0/dist/jspdf.umd.min.js',
             'https://cdn.jsdelivr.net/npm/jspdf@2.4.0/dist/jspdf.umd.min.js'
           ];
-          
+
           let currentIndex = 0;
-          
+
           function tryNextSource() {
             if (currentIndex >= sources.length) {
               console.log('All jsPDF sources failed, using fallback');
               resolve(false); // Use fallback
               return;
             }
-            
+
             const script = document.createElement('script');
             script.src = sources[currentIndex];
             script.async = false;
-            
+
             script.onload = function() {
               setTimeout(() => {
                 console.log('Script loaded, checking jsPDF:', typeof window.jsPDF, window.jsPDF);
@@ -159,16 +159,16 @@
                 }
               }, 200);
             };
-            
+
             script.onerror = function() {
               console.log('Failed to load from:', sources[currentIndex]);
               currentIndex++;
               tryNextSource();
             };
-            
+
             document.head.appendChild(script);
           }
-          
+
           tryNextSource();
         });
       };
