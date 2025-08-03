@@ -1,4 +1,27 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://classroom-seating-chart.com/sitemap.xml
+# Sitemap location
+Sitemap: https://seat.ahall.dev/sitemap.xml
+
+# Allow all educational and classroom management tools crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Educational content directories
+Allow: /themes/
+Allow: /settings/
+Allow: /about/
+
+# Block any sensitive areas (none currently, but good practice)
+Disallow: /api/
+Disallow: /*.json$
+
+# Crawl delay (in seconds) - be respectful to crawlers
+Crawl-delay: 1
